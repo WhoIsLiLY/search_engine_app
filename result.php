@@ -8,136 +8,74 @@ use Phpml\FeatureExtraction\TfIdfTransformer;
 use Phpml\Math\Distance\Minkowski;
 use Phpml\Math\Distance\Canberra;
 
-$proxy = 'proxy3.ubaya.ac.id:8080';
-$result = extract_html('https://www.kompas.com/');
+$html = file_get_html('https://www.kompas.com/');
 
 echo "<b><a href='index.php'>< Back to Home</a></b><br><br>";
-$i=0;
+$i = 0;
 $data_crawling = array();
-$sample_data = array();;
-
-if($result['code']=='200'){
-	$html = new simple_html_dom();
-	$html->load($result['message']);
-	foreach($html->find('div[class="wSpec-item"]') as $news){
-		if($i > 9) break;
-		else {
-			$newsTitle = $news->find('h4[class="wSpec-title"]', 0)->innertext;
-			$newsLink = $news->find('a', 0)->href;
-			$sendTitle = str_replace(" ", "#", $newsTitle);
-			$stopTitle = shell_exec("python preprocessing.py $sendTitle");
-
-			array_push($data_crawling, array($newsTitle,$newsLink,$stopTitle,'similarity'=>0.0));
-			array_push($sample_data, $stopTitle);
-		}
-		$i++;
-	}
-	array_push($sample_data, $_POST['keyword']);
-
-	echo "<pre>";
-	print_r($sample_data);
-	echo "</pre>";
-	$tf = new TokenCountVectorizer(new WhitespaceTokenizer());
-	$tf->fit($sample_data);
-	$tf->transform($sample_data);
-	// echo "<pre>";
-	// print_r($sample_data);
-	// echo "</pre>";				
-	$tfidf = new TfIdfTransformer($sample_data);
-	$tfidf->transform($sample_data);
-	echo "<pre>";
-	print_r($sample_data);
-	echo "</pre>";	
-	$total = count($sample_data);
-
-	
-	if($_POST['method']=='Minkowski') {
-		$minkowski = new Minkowski(count(explode(" ",$_POST['keyword'])));
-		for($i=0;$i<$total-1;$i++){
-			$result = $minkowski->distance($sample_data[$i], $sample_data[$total-1]);
-			$data_crawling[$i]['similarity'] = $result;
-		}
-	}
+$sample_data = array();
+foreach ($html->find('div[class="wSpec-item"]') as $news) {
+	if ($i > 9) break;
 	else {
-		$canberra = new Canberra();
-		for($i=0;$i<$total-1;$i++){
-			$result = $canberra->distance($sample_data[$i], $sample_data[$total-1]);
-			$data_crawling[$i]['similarity'] = $result;
-		}
+		$newsTitle = $news->find('h4[class="wSpec-title"]', 0)->innertext;
+		$newsLink = $news->find('a', 0)->href;
+		$sendTitle = str_replace(" ", "#", $newsTitle);
+		$stopTitle = shell_exec("python preprocessing.py $sendTitle");
+
+		array_push($data_crawling, array($newsTitle, $newsLink, $stopTitle, 'similarity' => 0.0));
+		array_push($sample_data, $stopTitle);
 	}
-	
-	$columns = array_column($data_crawling, 'similarity');
-	array_multisort($columns, SORT_ASC, $data_crawling);
-	echo "<b>Search Results</b><br><br>";
-	echo "<table border='1'>";
-	echo "<tr>"; 
-	echo "<th align='center'>Title</th>";
-	echo "<th align='center'>Link</th>";
-	echo "<th align='center'>Preprocessing Result</th>";
-	echo "<th align='center'>Similarity</th>";
+	$i++;
+}
+array_push($sample_data, $_POST['keyword']);
+
+echo "<pre>";
+print_r($sample_data);
+echo "</pre>";
+$tf = new TokenCountVectorizer(new WhitespaceTokenizer());
+$tf->fit($sample_data);
+$tf->transform($sample_data);
+// echo "<pre>";
+// print_r($sample_data);
+// echo "</pre>";				
+$tfidf = new TfIdfTransformer($sample_data);
+$tfidf->transform($sample_data);
+echo "<pre>";
+print_r($sample_data);
+echo "</pre>";
+$total = count($sample_data);
+
+
+if ($_POST['method'] == 'Minkowski') {
+	$minkowski = new Minkowski(count(explode(" ", $_POST['keyword'])));
+	for ($i = 0; $i < $total - 1; $i++) {
+		$result = $minkowski->distance($sample_data[$i], $sample_data[$total - 1]);
+		$data_crawling[$i]['similarity'] = $result;
+	}
+} else {
+	$canberra = new Canberra();
+	for ($i = 0; $i < $total - 1; $i++) {
+		$result = $canberra->distance($sample_data[$i], $sample_data[$total - 1]);
+		$data_crawling[$i]['similarity'] = $result;
+	}
+}
+
+$columns = array_column($data_crawling, 'similarity');
+array_multisort($columns, SORT_ASC, $data_crawling);
+echo "<b>Search Results</b><br><br>";
+echo "<table border='1'>";
+echo "<tr>";
+echo "<th align='center'>Title</th>";
+echo "<th align='center'>Link</th>";
+echo "<th align='center'>Preprocessing Result</th>";
+echo "<th align='center'>Similarity</th>";
+echo "</tr>";
+foreach ($data_crawling as $row) {
+	echo "<tr>";
+	echo "<td>" . $row[0] . "</td>";
+	echo "<td>" . $row[1] . "</td>";
+	echo "<td>" . $row[2] . "</td>";
+	echo "<td>" . $row["similarity"] . "</td>";
 	echo "</tr>";
-	foreach ($data_crawling as $row) {
-		echo "<tr>"; 
-		echo "<td>".$row[0]."</td>";
-		echo "<td>".$row[1]."</td>";
-		echo "<td>".$row[2]."</td>";
-		echo "<td>".$row["similarity"]."</td>";
-		echo "</tr>";
-	}
-	echo '</table>';
 }
-
-function extract_html($url) {
-		$response = array();
-		$response['code']='';
-		$response['message']='';
-		$response['status']=false;	
-		
-		$agent = 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.1) Gecko/20061204 Firefox/2.0.0.1';
-
-		// Some websites require referrer
-		$host = parse_url($url, PHP_URL_HOST);
-		$scheme = parse_url($url, PHP_URL_SCHEME);
-		$referrer = $scheme . '://' . $host; 
-
-		$curl = curl_init();
-
-		curl_setopt($curl, CURLOPT_HEADER, false);
-		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, true);
-		curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-		curl_setopt($curl, CURLOPT_URL, $url);
-		curl_setopt($curl, CURLOPT_USERAGENT, $agent);
-		curl_setopt($curl, CURLOPT_REFERER, $referrer);
-		curl_setopt($curl, CURLOPT_COOKIESESSION, 0);
-		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
-		curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, 5);
-
-		// allow to crawl https webpages
-		curl_setopt($curl,CURLOPT_SSL_VERIFYHOST,0);
-		curl_setopt($curl,CURLOPT_SSL_VERIFYPEER,0);
-
-		// the download speed must be at least 1 byte per second
-		curl_setopt($curl,CURLOPT_LOW_SPEED_LIMIT, 1);
-
-		// if the download speed is below 1 byte per second for more than 30 seconds curl will give up
-		curl_setopt($curl,CURLOPT_LOW_SPEED_TIME, 30);
-
-		$content = curl_exec($curl);
-		$code = curl_getinfo($curl, CURLINFO_HTTP_CODE);
-		$response['code'] = $code;
-		
-		if ($content === false) 
-		{
-			$response['status'] = false;
-			$response['message'] = curl_error($curl);
-		}
-		else
-		{
-			$response['status'] = true;
-			$response['message'] = $content;
-		}
-
-		curl_close($curl);
-		return $response;
-}
-?>
+echo '</table>';
