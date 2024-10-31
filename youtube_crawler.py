@@ -1,11 +1,36 @@
 import sys
 import io
 import time
+import re
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import TimeoutException, NoSuchElementException
+import preprocessing
+
+def clean_description(description):
+    """Clean up the description by removing the standard YouTube channel footer"""
+    # Pattern to match the footer section
+    patterns = [
+        r'\s*Videos\s*About\s*Facebook\s*Instagram\s*Twitter\s*Show less\s*$',
+        r'\s*Videos\s*About\s*Facebook\s*Instagram\s*Show less\s*$',
+        r'\s*Videos\s*About\s*Show less\s*$',
+        r'\s*Shorts remixing this video\s*$',
+        r'\s*Videos\s*$',
+        r'\s*About\s*$',
+        r'\s*Facebook\s*$',
+        r'\s*Instagram\s*$',
+        r'\s*Twitter\s*$',
+        r'\s*Show less\s*$',
+    ]
+    
+    cleaned_desc = description
+    for pattern in patterns:
+        cleaned_desc = re.sub(pattern, '', cleaned_desc, flags=re.IGNORECASE)
+    
+    return cleaned_desc.strip()
 
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
@@ -32,53 +57,137 @@ WebDriverWait(wd, 10).until(
 
 # Collect top 10 video links
 video_links = []
+video_text = [""] * 10
 videos = wd.find_elements(By.CSS_SELECTOR, 'ytd-video-renderer')[:10]
 for video in videos:
     video_url = video.find_element(By.ID, 'thumbnail').get_attribute('href')
-    video_links.append(video_url) 
- # print(video_links) # sampai sini sudah benar, dapat 10 link videos
-
+    video_links.append(video_url)
+print(video_links)
 for idx, link in enumerate(video_links):
     wd.get(link)
+    time.sleep(1)
     # Mute the YouTube video audio using JavaScript
     try:
-      wd.execute_script("""
-          let video = document.querySelector('video');
-          if (video) {
-              video.muted = true;
-              video.volume = 0;
-          }
+        wd.execute_script("""
+            let video = document.querySelector('video');
+            if (video) {
+                video.muted = true;
+                video.volume = 0;
+            }
         """)
     except:
         print("Unable to mute video")
 
     # Get video title and description
     try:
-        title = wd.find_element(By.CSS_SELECTOR, 'yt-formatted-string').text
-    except:
+        title_element = WebDriverWait(wd, 10).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, 'h1.ytd-video-primary-info-renderer'))
+        )
+        
+        if not title_element or not title_element.text:
+            selectors = [
+                'h1.title.style-scope.ytd-video-primary-info-renderer',
+                '#container h1.ytd-video-primary-info-renderer',
+                '#title h1',
+                '#title yt-formatted-string'
+            ]
+            
+            for selector in selectors:
+                try:
+                    title_element = wd.find_element(By.CSS_SELECTOR, selector)
+                    if title_element and title_element.text:
+                        break
+                except:
+                    continue
+                    
+        title = title_element.text if title_element and title_element.text else "No title found"
+    except Exception as e:
+        print(f"Error getting title: {str(e)}")
         title = "No title found"
 
+    # Get video description
     try:
-        descriptions = wd.find_elements(By.CSS_SELECTOR, "span.yt-core-attributed-string--link-inherit-color").text
-    except:
+        WebDriverWait(wd, 10).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, '#description-inline-expander'))
+        )
+
+        try:
+            show_more_button = WebDriverWait(wd, 3).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, 'tp-yt-paper-button#expand'))
+            )
+            wd.execute_script("arguments[0].click();", show_more_button)
+            time.sleep(1)
+        except:
+            pass
+
+        description = ""
+        selectors = [
+            '#description-inline-expander ytd-video-description-transcript-section-renderer',
+            '#description-inline-expander ytd-structured-description-content-renderer #content',
+            '#description-inline-expander #content ytd-expander.ytd-video-secondary-info-renderer',
+            '#description-inline-expander .ytd-expanded-metadata-renderer',
+            '#description-inline-expander #description'
+        ]
+
+        try:
+            transcript_element = wd.find_element(By.CSS_SELECTOR, 'ytd-video-description-transcript-section-renderer')
+            wd.execute_script("arguments[0].remove();", transcript_element)
+        except:
+            pass
+
+        for selector in selectors:
+            try:
+                description_element = wd.find_element(By.CSS_SELECTOR, selector)
+                if description_element and description_element.text:
+                    text = description_element.text
+                    if "Transcript\nFollow along using the transcript." not in text:
+                        description = text
+                        break
+            except NoSuchElementException:
+                continue
+
+        if not description:
+            try:
+                container = wd.find_element(By.CSS_SELECTOR, '#description-inline-expander')
+                try:
+                    transcript = container.find_element(By.CSS_SELECTOR, 'ytd-video-description-transcript-section-renderer')
+                    wd.execute_script("arguments[0].remove();", transcript)
+                except:
+                    pass
+                description = container.text
+            except:
+                description = "No description available"
+
+        description = clean_description(description)
+
+    except Exception as e:
+        print(f"Error getting description: {str(e)}")
         description = "No description available"
 
-    print(f"{idx+1}. {title.encode('utf-8', errors='replace').decode('utf-8')}")
+    print(f"\n{idx+1}. Title: {title.encode('utf-8', errors='replace').decode('utf-8')}")
     print(f"Description: {description}\n")
+    video_text[idx] += title + " " + description
 
-    # Scroll down to load comments
-    wd.execute_script("window.scrollTo(0, document.documentElement.scrollHeight);")
-    #time.sleep(5)
 
-    WebDriverWait(wd, 10).until(
-      EC.presence_of_all_elements_located((By.CSS_SELECTOR, '#content #content-text'))
-    )
+    # # Scroll down to load comments
+    # wd.execute_script("window.scrollTo(0, document.documentElement.scrollHeight);")
+    # time.sleep(2)  # Give some time for comments to load
+
+    # Wait for comments to load
+    try:
+        WebDriverWait(wd, 10).until(
+            EC.presence_of_all_elements_located((By.CSS_SELECTOR, 'ytd-comment-thread-renderer'))
+        )
+    except TimeoutException:
+        print("No comments found or comments are disabled")
+        continue
+
     # Get top 10 comments
     comments = wd.find_elements(By.CSS_SELECTOR, "#content #content-text")[:10]
     for comment_idx, comment in enumerate(comments):
         comment_text = comment.text
         print(f"   Comment {comment_idx+1}: {comment_text}")
-
+        video_text[idx] += comment_text
         # Expand replies if available
         try:
             show_replies_button = comment.find_element(By.XPATH, "../../following-sibling::ytd-comment-replies-renderer//tp-yt-paper-button")
@@ -92,9 +201,15 @@ for idx, link in enumerate(video_links):
                 print(f"      Reply {reply_idx+1}: {reply_text}")
 
         except:
-            print("      No replies found")
+            print("      No replies found\n")
 
 wd.quit()
+
+for text in video_text:
+    text = re.sub(r'\s+', ' ', text)
+
+    print(text)
+    #print(text)
 """
 import sys
 import io
