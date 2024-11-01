@@ -37,6 +37,7 @@ sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 # Set up Chrome options
 chrome_options = Options()
 chrome_options.add_argument("--headless")  # Run in headless mode
+chrome_options.add_argument("--mute-audio") 
 chrome_options.add_argument("--no-sandbox")  # Bypass OS security model
 chrome_options.add_argument("--disable-gpu")  # Applicable to Windows
 chrome_options.add_argument("start-maximized")  # Start maximized
@@ -51,7 +52,7 @@ keyword = sys.argv[1]
 wd.get("https://www.youtube.com/results?search_query=" + keyword)
 
 # Wait until videos are loaded
-WebDriverWait(wd, 10).until(
+WebDriverWait(wd, 20).until(
     EC.presence_of_all_elements_located((By.CSS_SELECTOR, 'ytd-video-renderer'))
 )
 
@@ -64,7 +65,7 @@ for video in videos:
     video_links.append(video_url)
 print(video_links)
 for idx, link in enumerate(video_links):
-    wd.get(link)
+    wd.get(link + "&mute=1")
     time.sleep(1)
     # Mute the YouTube video audio using JavaScript
     try:
@@ -176,7 +177,7 @@ for idx, link in enumerate(video_links):
     # Wait for comments to load
     try:
         WebDriverWait(wd, 10).until(
-            EC.presence_of_all_elements_located((By.CSS_SELECTOR, 'ytd-comment-thread-renderer'))
+            EC.presence_of_all_elements_located((By.CSS_SELECTOR, '#content #content-text'))
         )
     except TimeoutException:
         print("No comments found or comments are disabled")
@@ -192,7 +193,9 @@ for idx, link in enumerate(video_links):
         try:
             show_replies_button = comment.find_element(By.XPATH, "../../following-sibling::ytd-comment-replies-renderer//tp-yt-paper-button")
             wd.execute_script("arguments[0].click();", show_replies_button)
-            time.sleep(5)
+            WebDriverWait(wd, 10).until(
+                EC.presence_of_all_elements_located((By.XPATH, "../../following-sibling::ytd-comment-replies-renderer//ytd-comment-renderer #content-text"))
+            )
 
             # Get up to 10 replies
             replies = comment.find_elements(By.XPATH, "../../following-sibling::ytd-comment-replies-renderer//ytd-comment-renderer #content-text")[:10]
@@ -209,7 +212,7 @@ for text in video_text:
     text = re.sub(r'\s+', ' ', text)
 
     print(text)
-    #print(text)
+
 """
 import sys
 import io
