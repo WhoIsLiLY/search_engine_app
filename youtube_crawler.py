@@ -8,7 +8,18 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
-import preprocessing
+from preprocessing import stemmer_and_remove_stopwords, removal_prepocessing, removal_link
+# import emoji
+# from nltk.corpus import stopwords
+# from Sastrawi.Stemmer.StemmerFactory import StemmerFactory
+# import nltk
+
+# nltk.download('stopwords')
+
+# stop_words = set(stopwords.words('indonesian'))
+
+# factory = StemmerFactory()
+# stemmer = factory.create_stemmer()
 
 def clean_description(description):
     """Clean up the description by removing the standard YouTube channel footer"""
@@ -209,7 +220,29 @@ for idx, link in enumerate(video_links):
 wd.quit()
 
 for text in video_text:
-    text = re.sub(r'\s+', ' ', text)
+    text = removal_link(text)
+    text = removal_prepocessing(text)
+
+    # text = re.sub(r'\s+', ' ', text)
+    # text = text.lower() # Case Folding
+    # text = re.sub(r'@\w+', '', text) # Remove Mention
+    # text = re.sub(r'http\S+|www\.\S+', '', text) # Remove Link
+    # text = re.sub(r'[()|[].,/\'\"!?:;-]', '', text) # Remove Symbol
+    # text = emoji.replace_emoji(text, replace="") # Remove Emoji
+    # symbol_pattern = re.compile(r"[^\w\s]", re.UNICODE) # Remove More Symbol
+    # text = symbol_pattern.sub("", text)
+
+    text = stemmer_and_remove_stopwords(text) # Stemer dan Stop Removal
+    
+    # text = stemmer.stem(text) # Stemer
+    # words = text.split()
+    # stop_removal = []
+    # for word in words:
+    #     if word != stop_words:
+            # stop_removal.append(word)
+    # text = ' '.join(stop_removal)
+
+    # text = ' '.join(word for word in text.split() if word not in stop_words) #Stop Word
 
     print(text)
 
