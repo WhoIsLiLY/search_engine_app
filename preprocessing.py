@@ -22,28 +22,42 @@ stopper = StopWordRemoverFactory().create_stop_word_remover()
 
 # print(stop_title)
 
-def process_hashtags(text):
-    hashtags = re.findall(r"#(\w+)", text)
-
-    for hashtag in hashtags:
-        if hashtag.islower() or hashtag.isupper():
-            replacement = hashtag.lower() 
-
+def preprocess_hashtags(text):
+    hashtags = []
+    
+    for hashtag in text.split():
+        if not hashtag.startswith("#"):
+            continue
+        
+        # Pola 1: Hapus tanda "#" jika semua karakter setelahnya huruf kecil dan tidak ada "_"
+        if hashtag[1:].islower() and "_" not in hashtag:
+            hashtags.append(hashtag[1:])
+        
         elif "_" in hashtag:
-            replacement = hashtag.replace("_", " ").lower()
-
+            # Case khusus 1: Kata pertama huruf kecil, kata setelah "_" memiliki huruf besar
+            if hashtag[1].islower() and any(c.isupper() for c in hashtag.split("_")[1:]):
+                hashtags.append(hashtag[1:].replace("_", " "))
+            # Case khusus 2 & Pola 2: Hapus "#" dan ganti "_" dengan spasi
+            else:
+                hashtags.append(hashtag[1:].replace("_", " "))
+        
+        # Pola 3: Hapus "#" dan tambahkan spasi antara huruf besar
         else:
-            replacement = ' '.join(re.findall(r'[A-Z][^A-Z]*', hashtag))
+            word = hashtag[1:2]  
+            for i in hashtag[2:]:
+                if i.isupper():
+                    word += " "  
+                word += i
+            hashtags.append(word)
+    
+    return hashtags
 
-        preprocess_hastag = text.replace(f"#{hashtag}", replacement)
 
-    return preprocess_hastag
-
-def removal_link(text):
+def remove_link(text):
     preprocess_link = re.sub(r'http\S+|www\.\S+', '', text) # Remove Link
     return preprocess_link
 
-def removal_prepocessing(text):
+def remove_prepocessing(text):
     preprocess_text = re.sub(r'\s+', ' ', text)
     preprocess_text = text.lower() # Case Folding
     preprocess_text = re.sub(r'@\w+', '', text) # Remove Mention

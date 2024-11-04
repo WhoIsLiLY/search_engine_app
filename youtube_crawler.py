@@ -8,7 +8,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
-from preprocessing import stemmer_and_remove_stopwords, removal_prepocessing, removal_link
+from preprocessing import stemmer_and_remove_stopwords, remove_prepocessing, remove_link, preprocess_hashtags
 # import emoji
 # from nltk.corpus import stopwords
 # from Sastrawi.Stemmer.StemmerFactory import StemmerFactory
@@ -220,8 +220,9 @@ for idx, link in enumerate(video_links):
 wd.quit()
 
 for text in video_text:
-    text = removal_link(text)
-    text = removal_prepocessing(text)
+    # text = preprocess_hashtags(text)
+    text = remove_link(text)
+    text = remove_prepocessing(text)
 
     # text = re.sub(r'\s+', ' ', text)
     # text = text.lower() # Case Folding
