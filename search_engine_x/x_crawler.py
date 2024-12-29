@@ -26,52 +26,57 @@ wd = webdriver.Chrome(options=chrome_options)
 username = "dummy_x_iir"  # Replace with your username
 password = "dummytwitter"  # Replace with your password
 
-# Step 1: Go to the login page
-wd.get("https://x.com/i/flow/login")
+def perform_login():
+    # Step 1: Go to the login page
+    wd.get("https://x.com/i/flow/login")
 
-# Step 2: Enter username and click "Next"
-WebDriverWait(wd, 100).until(
-    EC.presence_of_element_located((By.NAME, "text"))
-)
-wd.find_element(By.NAME, "text").send_keys(username)
-# print("Entered username")
-
-# Find and click the "Next" button after entering the username
-try:
-    next_button = WebDriverWait(wd, 10).until(
-        EC.element_to_be_clickable((By.XPATH, "//button[contains(., 'Next')]"))
-    )
-    next_button.click()
-    # print("Clicked 'Next' button")
-except Exception as e:
-    print(f"Failed to click 'Next' button: {e}")
-
-# Step 3: Enter password
-WebDriverWait(wd, 100).until(
-    EC.presence_of_element_located((By.NAME, "password"))
-)
-wd.find_element(By.NAME, "password").send_keys(password)
-# print("Entered password")
-
-# Step 4: Click the "Log in" button
-try:
-    login_button = WebDriverWait(wd, 10).until(
-        EC.element_to_be_clickable((By.XPATH, "//button[contains(., 'Log in')]"))
-    )
-    login_button.click()
-    # print("Clicked 'Log in' button")
-except Exception as e:
-    print(f"Failed to click 'Log in' button: {e}")
-
-# Step 5: Confirm successful login by checking URL or page content
-try:
+    # Step 2: Enter username and click "Next"
     WebDriverWait(wd, 100).until(
-        EC.url_changes("https://x.com/i/flow/login")
+        EC.presence_of_element_located((By.NAME, "text"))
     )
-    # print("Login successful")
-except Exception as e:
-    print(f"Failed to log in: {e}")
+    wd.find_element(By.NAME, "text").send_keys(username)
+    # print("Entered username")
 
+    # Find and click the "Next" button after entering the username
+    try:
+        next_button = WebDriverWait(wd, 10).until(
+            EC.element_to_be_clickable((By.XPATH, "//button[contains(., 'Next')]"))
+        )
+        next_button.click()
+        # print("Clicked 'Next' button")
+    except Exception as e:
+        print(f"Failed to click 'Next' button: {e}")
+
+    # Step 3: Enter password
+    WebDriverWait(wd, 100).until(
+        EC.presence_of_element_located((By.NAME, "password"))
+    )
+    wd.find_element(By.NAME, "password").send_keys(password)
+    # print("Entered password")
+
+    # Step 4: Click the "Log in" button
+    try:
+        login_button = WebDriverWait(wd, 10).until(
+            EC.element_to_be_clickable((By.XPATH, "//button[contains(., 'Log in')]"))
+        )
+        login_button.click()
+        # print("Clicked 'Log in' button")
+    except Exception as e:
+        print(f"Failed to click 'Log in' button: {e}")
+
+    # Step 5: Confirm successful login by checking URL or page content
+    try:
+        WebDriverWait(wd, 100).until(
+            EC.url_changes("https://x.com/i/flow/login")
+        )
+        # print("Login successful")
+    except Exception as e:  
+        print(f"Failed to log in: {e}")
+
+perform_login()
+
+def is_logged_in():
+    return "login" not in wd.current_url
 
 
 # Continue with the crawling logic
@@ -79,25 +84,32 @@ except Exception as e:
 keyword = " ".join(sys.argv[1:])
 x_links = []
 
-wd.get(f"https://x.com/search?q={keyword}&f=media")
-while len(x_links) < 10:
-    time.sleep(3)
-    try:
-        x_results = wd.find_elements(By.CSS_SELECTOR, 'li.css-175oi2r a')
-        for result in x_results:
-            link = result.get_attribute('href')
-            if "/photo/" in link and link not in x_links:
-                x_links.append(link)
-                if len(x_links) >= 10:
-                    break
-    except Exception as e:
-        print(f"Failed to fetch X search results: {e}")
-        break
+try:
+    wd.get(f"https://x.com/search?q={keyword}&f=media")
+    if not is_logged_in():
+        perform_login()
+        wd.get(f"https://x.com/search?q={keyword}&f=media")
 
-if not x_links:
-    print("No posts found.")
-    wd.quit()
-    sys.exit(1)
+    while len(x_links) < 10:
+        time.sleep(3)
+        try:
+            x_results = wd.find_elements(By.CSS_SELECTOR, 'li.css-175oi2r a')
+            for result in x_results:
+                link = result.get_attribute('href')
+                if "/photo/" in link and link not in x_links:
+                    x_links.append(link)
+                    if len(x_links) >= 10:
+                        break
+        except Exception as e:
+            print(f"Failed to fetch X search results: {e}")
+            break
+except Exception as e:
+    print(f"An error occurred: {e}")
+finally:
+    if not x_links:
+        print("No posts found.")
+        wd.quit()
+        sys.exit(1)
 
 # Display Result
 def display_results(source, original_text, preprocessed_text, similarity=0):
@@ -117,7 +129,8 @@ for idx, link in enumerate(x_links):
 
     # Get Account name (nti diganti jadi x, instgram, atau youtube)
     try:
-        account = wd.find_element(By.CSS_SELECTOR, "[data-testid='User-Name']").text
+        account = WebDriverWait(wd, 10).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, "[data-testid='User-Name']"))).text
     except:
         account = "Account not available"
 
