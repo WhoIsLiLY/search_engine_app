@@ -1,6 +1,13 @@
 <?php
+
+require_once __DIR__ . '../../vendor/autoload.php';
+
+// Load file .env
+$dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . "/..");
+$dotenv->load();
+
 // API Key YouTube
-$apiKey = "AIzaSyCUmGs5W1T3ZCUNoa3-8gsiAjWYwAIz14g";
+$apiKey = $_ENV['API_KEY'];
 
 // Keyword pencarian
 $keyword = "Terima kasih pak Jokowi"; // Ganti dengan keyword yang diinginkan

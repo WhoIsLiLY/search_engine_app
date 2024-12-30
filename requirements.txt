@@ -1,0 +1,4 @@
+selenium
+sastrawi
+emoji
+python-dotenv
