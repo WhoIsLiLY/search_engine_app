@@ -1,4 +1,5 @@
 import sys
+import json
 import io
 import time
 from selenium import webdriver
@@ -16,8 +17,14 @@ if len(sys.argv) < 2:
     print("Error: Keyword argument is missing. Usage: python instagram_crawler.py <keyword>")
     sys.exit(1)
 
+# Dictionary to save the result
+results = []
+
 # Combine all keyword arguments into a single string
 keyword = " ".join(sys.argv[1:])
+keyword = preprocessing.stemmer_and_remove_stopwords(
+          preprocessing.remove_prepocessing(keyword)
+        )
 
 # Setup Selenium Chrome options
 chrome_options = Options()
@@ -91,21 +98,28 @@ if not google_links:
     sys.exit(1)
 
 # Display results
-def display_results(source, original_text, preprocessed_text, similarity=0):
-    print(f"Source: {source}")
-    print("")
-    print(f"Original Text: {original_text}")
-    print("")
-    print(f"Preprocessed Text: {preprocessed_text}")
-    print("")
-    print(f"Similarity: {similarity:.4f}")
-    print("-" * 60)
+def display_results(original_text, preprocessed_text, similarity=0):
+    result = {
+        "Original Text": original_text,
+        "Preprocessed Text": preprocessed_text,
+        "Similarity": similarity
+    }
+    results.append(result)
+    # print(f"Original Text: {original_text}")
+    # print("")
+    # print(f"Preprocessed Text: {preprocessed_text}")
+    # print("")
+    # print(f"Similarity: {similarity:.4f}")
+    # print("-" * 60)
 
 
 for idx, link in enumerate(google_links):
     wd.get(link)
     time.sleep(2)
 
+    original_text = ""
+    preprocessed_text = ""
+ 
     # Get account name
     try:
         account = WebDriverWait(wd, 10).until(
@@ -116,36 +130,37 @@ for idx, link in enumerate(google_links):
 
     # Get caption
     try:
-        caption = wd.find_element(By.CSS_SELECTOR, "h1._aade").text
-        preprocessed_caption = preprocessing.stemmer_and_remove_stopwords(
-            preprocessing.remove_prepocessing(caption)
-        )
+        original_text += " " + wd.find_element(By.CSS_SELECTOR, "h1._aade").text
+        # preprocessed_caption = preprocessing.stemmer_and_remove_stopwords(
+        #     preprocessing.remove_prepocessing(caption)
+        # )
     except:
         caption = "No caption available"
-        preprocessed_caption = ""
 
     # Get comments
-    best_comment = "No comment available"
-    preprocessed_best_comment = ""
-
     try:
         comments = wd.find_elements(By.CSS_SELECTOR, "ul._a9ym li span._aaco")
         for comment in comments:
             try:
-                comment_text = comment.text  # Ambil teks komentar
-                preprocessed_comment = preprocessing.stemmer_and_remove_stopwords(
-                    preprocessing.remove_prepocessing(comment_text)
-                )
-                # Simpan komentar
-                best_comment = comment_text
-                preprocessed_best_comment = preprocessed_comment
+                original_text += comment.text  # Ambil teks komentar
             except:
                 pass
     except:
         pass
+    
+    preprocessed_text = preprocessing.stemmer_and_remove_stopwords(
+            preprocessing.remove_prepocessing(original_text)
+        )
+    
+    # Similarity
+    similarity = 0 # Panggil function perhitungan similaritas disini
 
     # Bandingkan caption dan komentar terbaik
-    display_results(account, caption, preprocessed_caption, similarity=0)
+    display_results(original_text, preprocessed_text, similarity)
+
+# Send json
+json_output = json.dumps(results, ensure_ascii=False, indent=4)
+print(json_output)
 
 # Quit WebDriver
 wd.quit()
