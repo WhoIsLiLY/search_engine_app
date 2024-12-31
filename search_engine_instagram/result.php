@@ -3,12 +3,14 @@ $keyword = $_POST['keyword'];
 $output = shell_exec("python instagram_crawler.py $keyword");
 
 echo "<b><a href='index.php'>< Back to Home</a></b><br><br>";
+echo "<h1>RAW</h1>";
 echo "<pre>$output</pre>";
 
 $results = json_decode($output, true);
+echo "<br><br><h1>Array Mode</h1>";
 echo "<pre>";
 print_r($results);
-echo "</pre>";
+echo "</pre>";	
 // Cek apakah decoding berhasil
 if ($results === null && json_last_error() !== JSON_ERROR_NONE) {
 	echo "<b>Error decoding JSON:</b> " . json_last_error_msg();

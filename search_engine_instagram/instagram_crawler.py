@@ -17,7 +17,7 @@ if len(sys.argv) < 2:
     print("Error: Keyword argument is missing. Usage: python instagram_crawler.py <keyword>")
     sys.exit(1)
 
-# Dictionary to save the result
+# List of Dictionaries to save the result
 results = []
 
 # Combine all keyword arguments into a single string
@@ -142,7 +142,7 @@ for idx, link in enumerate(google_links):
         comments = wd.find_elements(By.CSS_SELECTOR, "ul._a9ym li span._aaco")
         for comment in comments:
             try:
-                original_text += comment.text  # Ambil teks komentar
+                original_text += " " + comment.text  # Ambil teks komentar
             except:
                 pass
     except:

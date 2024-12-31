@@ -1,4 +1,5 @@
 import sys
+import json
 import io
 import time
 from selenium import webdriver
@@ -21,6 +22,9 @@ chrome_options.add_argument("--disable-extensions")
 
 # Initialize WebDriver with options
 wd = webdriver.Chrome(options=chrome_options)
+
+# List of Dictionaries to save the result
+results = []
 
 # Login details
 username = "dummy_x_iir"  # Replace with your username
@@ -82,6 +86,9 @@ def is_logged_in():
 # Continue with the crawling logic
 
 keyword = " ".join(sys.argv[1:])
+keyword = preprocessing.stemmer_and_remove_stopwords(
+          preprocessing.remove_prepocessing(keyword)
+        )
 x_links = []
 
 try:
@@ -112,20 +119,30 @@ finally:
         sys.exit(1)
 
 # Display Result
-def display_results(source, original_text, preprocessed_text, similarity=0):
-    print(f"Source: {source}")
-    print("")
-    print(f"Original text: {original_text}")
-    print("")
-    print(f"Preprocessed text: {preprocessed_text}")
-    print("")
-    print(f"Similarity: {similarity:.4f}")
-    print("-" * 60)
+def display_results(original_text, preprocessed_text, similarity=0):
+    result = {
+        "Original Text": original_text,
+        "Preprocessed Text": preprocessed_text,
+        "Similarity": similarity
+    }
+    results.append(result)
+
+    # print(f"Source: {source}")
+    # print("")
+    # print(f"Original text: {original_text}")
+    # print("")
+    # print(f"Preprocessed text: {preprocessed_text}")
+    # print("")
+    # print(f"Similarity: {similarity:.4f}")
+    # print("-" * 60)
 
 # Process each post link
 for idx, link in enumerate(x_links):
     wd.get(link)
     time.sleep(2)
+
+    original_text = ""
+    preprocessed_text = ""
 
     # Get Account name (nti diganti jadi x, instgram, atau youtube)
     try:
@@ -136,33 +153,31 @@ for idx, link in enumerate(x_links):
 
     # Get description 
     try:
-        description = wd.find_element(By.CSS_SELECTOR, "[data-testid='tweetText']").text
-        preprocessed_description = preprocessing.stemmer_and_remove_stopwords(
-            preprocessing.remove_prepocessing(description)
-        )
+        original_text += " " + wd.find_element(By.CSS_SELECTOR, "[data-testid='tweetText']").text
     except:
         description = "No description available"
-        preprocessed_description = ""
-
-    best_comment = "No comment available"
-    preprocessed_best_comment = ""
 
     # Get comment
     try:
         div_elements = wd.find_elements(By.CSS_SELECTOR, "[data-testid='cellInnerDiv']")
         for div in div_elements:
             try:
-                comment = div.find_element(By.CSS_SELECTOR, "[data-testid='tweetText']").text
-                preprocessed_comment = preprocessing.stemmer_and_remove_stopwords(
-                    preprocessing.remove_prepocessing(comment)
-                )
-                best_comment = comment
-                preprocessed_best_comment = preprocessed_comment
+                original_text += " " + div.find_element(By.CSS_SELECTOR, "[data-testid='tweetText']").text
             except:
                 pass
     except:
         pass
 
-    display_results(account, description, preprocessed_description, similarity=0)
+    preprocessed_text = preprocessing.stemmer_and_remove_stopwords(
+                preprocessing.remove_prepocessing(original_text)
+            )
+    
+    # Similarity
+    similarity = 0 # Panggil function perhitungan similaritas disini
 
+    display_results(original_text, preprocessed_text, similarity=0)
+
+# Send json
+json_output = json.dumps(results, ensure_ascii=False, indent=4)
+print(json_output)
 wd.quit()
