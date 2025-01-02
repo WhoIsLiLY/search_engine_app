@@ -97,7 +97,7 @@ try:
         perform_login()
         wd.get(f"https://x.com/search?q={keyword}&f=media")
 
-    while len(x_links) < 10:
+    while len(x_links) < 8:
         time.sleep(3)
         try:
             x_results = wd.find_elements(By.CSS_SELECTOR, 'li.css-175oi2r a')
@@ -105,7 +105,7 @@ try:
                 link = result.get_attribute('href')
                 if "/photo/" in link and link not in x_links:
                     x_links.append(link)
-                    if len(x_links) >= 10:
+                    if len(x_links) >= 8:
                         break
         except Exception as e:
             print(f"Failed to fetch X search results: {e}")

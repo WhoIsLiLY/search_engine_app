@@ -3,7 +3,7 @@ $keyword = $_POST['keyword'];
 
 // Jalankan tiga crawler Python secara terpisah
 $output_instagram = shell_exec("python instagram_crawler.py $keyword");
-$output_x = shell_exec("python instagram_crawler.py $keyword");
+$output_x = shell_exec("python x_crawler.py $keyword");
 $output_youtube = shell_exec("python instagram_crawler.py $keyword");
 
 // Decode hasil output masing-masing crawler

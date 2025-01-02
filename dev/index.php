@@ -14,7 +14,6 @@
     <header class="bg-blue-600 text-white py-4">
         <div class="container mx-auto flex justify-between items-center">
             <h1 class="text-2xl font-bold">KEPO.COM</h1>
-            <input type="text" placeholder="Search..." class="p-2 rounded-lg w-1/2">
         </div>
     </header>
 
@@ -39,35 +38,56 @@
 
     <!-- Form Result -->
     <div id="result" class="hidden">
-        <!-- Tabs -->
-        <div class="container mx-auto my-4">
-            <div class="flex space-x-4 border-b">
-                <button class="py-2 px-4 text-blue-600 border-b-2 border-blue-600" onclick="showTab('all')">All</button>
-                <button class="py-2 px-4 text-gray-600 hover:text-blue-600" onclick="showTab('instagram')">Instagram</button>
-                <button class="py-2 px-4 text-gray-600 hover:text-blue-600" onclick="showTab('x')">X</button>
-                <button class="py-2 px-4 text-gray-600 hover:text-blue-600" onclick="showTab('youtube')">YouTube</button>
+        <div class="flex justify-start items-center pt-4">
+            <!-- Checkboxes -->
+            <div class="container mx-auto my-4">
+                <div class="flex space-x-4 justify-end px-5">
+                    <div class="flex items-center ps-4 border border-gray-200 rounded dark:border-gray-700">
+                        <label for="bordered-radio-1" class="w-full py-4 ms-2 text-lg font-bold text-gray-900 dark:text-black-300 mr-4">Platform: </label>
+                        <div class="flex space-x-6 mr-5">
+                            <label class="flex items-center space-x-2">
+                                <input type="checkbox" id="platform-youtube" value="youtube" class="platform-checkbox w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500" checked>
+                                <span class="text-lg text-gray-700">YouTube</span>
+                            </label>
+                            <label class="flex items-center space-x-2">
+                                <input type="checkbox" id="platform-instagram" value="instagram" class="platform-checkbox w-5 h-5 text-pink-600 border-gray-300 rounded focus:ring-pink-500" checked>
+                                <span class="text-lg text-gray-700">Instagram</span>
+                            </label>
+                            <label class="flex items-center space-x-2">
+                                <input type="checkbox" id="platform-x" value="x" class="platform-checkbox w-5 h-5 text-black border-gray-300 rounded focus:ring-gray-700" checked>
+                                <span class="text-lg text-gray-700 mr-4">X</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Radio Buttons -->
+            <div class="container mx-auto my-4">
+                <div class="flex space-x-4 justify-start px-5">
+
+                    <div class="flex items-center ps-4 border border-gray-200 rounded dark:border-gray-700">
+                        <label for="bordered-radio-1" class="w-full py-4 ms-2 text-lg font-bold text-gray-900 dark:text-black-300 mr-4">Similarity: </label>
+
+                        <div class="flex space-x-6 mr-5">
+                            <label class="flex items-center space-x-2">
+                                <input type="radio" id="similarity-asymetric" name="similarity" value="asymetric" class="w-5 h-5 text-green-600 border-gray-300 rounded focus:ring-green-500" checked>
+                                <span class="text-lg text-gray-700">Asymmetric</span>
+                            </label>
+                            <label class="flex items-center space-x-2">
+                                <input type="radio" id="similarity-cosine" name="similarity" value="cosine" class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                                <span class="text-lg text-gray-700">Cosine</span>
+                            </label>
+                        </div>
+                    </div>
+
+                </div>
             </div>
         </div>
 
         <!-- Results Section -->
         <div class="container mx-auto my-8">
-            <!-- All Results -->
-            <div id="all" class="results-section grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <!-- All Cards will be injected here -->
-            </div>
-            <!-- Instagram Results -->
-            <div id="instagram" class="results-section grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 hidden">
-                <!-- Instagram Cards will be injected here -->
-            </div>
-
-            <!-- X Results -->
-            <div id="x" class="results-section grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 hidden">
-                <!-- X Cards will be injected here -->
-            </div>
-
-            <!-- YouTube Results -->
-            <div id="youtube" class="results-section grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 hidden">
-                <!-- YouTube Cards will be injected here -->
+            <div id="results" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <!-- Filtered Cards will be injected here -->
             </div>
         </div>
 
@@ -77,6 +97,7 @@
             <span id="currentPage" class="font-bold">1</span>
             <button class="py-2 px-4 bg-gray-200 rounded-lg ml-2" onclick="nextPage()">Next</button>
         </div>
+
 
     </div>
 
@@ -94,7 +115,10 @@
             all: [],
             instagram: [],
             x: [],
-            youtube: []
+            youtube: [],
+            // instagram_x: [],
+            // instagram_youtube: [],
+            // x_youtube: []
         };
         $(document).ready(function() {
             $('#searchForm').on('submit', function(event) {
@@ -129,7 +153,7 @@
 
                         // Munculkan form result
                         $('#result').removeClass('hidden');
-                        
+
                         console.log(response);
                         // Proses data dan masukkan ke dalam variabel `data`
                         data = {
@@ -141,6 +165,18 @@
                             instagram: response.instagram,
                             x: response.x,
                             youtube: response.youtube,
+                            // instagram_x: [
+                            //     ...response.instagram,
+                            //     ...response.x
+                            // ],
+                            // instagram_youtube: [
+                            //     ...response.instagram,
+                            //     ...response.youtube
+                            // ],
+                            // x_youtube: [
+                            //     ...response.x,
+                            //     ...response.youtube
+                            // ]
                         };
                         console.log(data);
                         displayCards();
@@ -164,51 +200,61 @@
                 });
             });
         });
-//         // Dummy data
-//         const data = {
-//             all: Array.from({
-//                 length: 20
-//             }, (_, i) => {
-//                 const sources = ['Youtube', 'Instagram', 'X']; // Array sumber
-//                 const randomSource = sources[Math.floor(Math.random() * sources.length)]; // Pilih sumber secara acak
+        // // Dummy data
+        // const data = {
+        //     all: Array.from({
+        //         length: 20
+        //     }, (_, i) => {
+        //         const sources = ['Youtube', 'Instagram', 'X']; // Array sumber
+        //         const randomSource = sources[Math.floor(Math.random() * sources.length)]; // Pilih sumber secara acak
 
-//                 return {
-//                     source: randomSource, // Sumber acak
-//                     text: `All post ${i + 1}`,
-//                     preprocessed: `Preprocessed text ${i + 1}`,
-//                     similarity: Math.floor(Math.random() * 100) + 1, // Random similarity
-//                 };
-//             }),
-//             instagram: Array.from({
-//                 length: 15
-//             }, (_, i) => ({
-//                 source: `Instagram`,
-//                 text: `Instagram post ${i + 1}`,
-//                 preprocessed: `Preprocessed text ${i + 1}     Lorem ipsum dolor sit amet consectetur adipisicing elit. Adipisci corrupti molestias aliquid ut perferendis quisquam mollitia architecto quod atque, ad, nobis nostrum ullam tenetur laborum impedit suscipit expedita eveniet deleniti!
-// `,
-//                 similarity: Math.floor(Math.random() * 100) + 1,
-//             })),
-//             x: Array.from({
-//                 length: 12
-//             }, (_, i) => ({
-//                 source: `X`,
-//                 text: `X post ${i + 1}`,
-//                 preprocessed: `Preprocessed text ${i + 1}`,
-//                 similarity: Math.floor(Math.random() * 100) + 1,
-//             })),
-//             youtube: Array.from({
-//                 length: 20
-//             }, (_, i) => ({
-//                 source: `Youtube`,
-//                 text: `YouTube post ${i + 1}`,
-//                 preprocessed: `Preprocessed text ${i + 1}`,
-//                 similarity: Math.floor(Math.random() * 100) + 1,
-//             })),
-//         };
+        //         return {
+        //             source: randomSource, // Sumber acak
+        //             text: `All post ${i + 1}`,
+        //             preprocessed: `Preprocessed text ${i + 1}`,
+        //             similarity: Math.floor(Math.random() * 100) + 1, // Random similarity
+        //         };
+        //     }),
+        //     instagram: Array.from({
+        //         length: 15
+        //     }, (_, i) => ({
+        //         source: `Instagram`,
+        //         text: `Instagram post ${i + 1}`,
+        //         preprocessed: `Preprocessed text ${i + 1}     Lorem ipsum dolor sit amet consectetur adipisicing elit. Adipisci corrupti molestias aliquid ut perferendis quisquam mollitia architecto quod atque, ad, nobis nostrum ullam tenetur laborum impedit suscipit expedita eveniet deleniti!
+        // `,
+        //         similarity: Math.floor(Math.random() * 100) + 1,
+        //     })),
+        //     x: Array.from({
+        //         length: 12
+        //     }, (_, i) => ({
+        //         source: `X`,
+        //         text: `X post ${i + 1}`,
+        //         preprocessed: `Preprocessed text ${i + 1}`,
+        //         similarity: Math.floor(Math.random() * 100) + 1,
+        //     })),
+        //     youtube: Array.from({
+        //         length: 20
+        //     }, (_, i) => ({
+        //         source: `Youtube`,
+        //         text: `YouTube post ${i + 1}`,
+        //         preprocessed: `Preprocessed text ${i + 1}`,
+        //         similarity: Math.floor(Math.random() * 100) + 1,
+        //     })),
+        // };
 
-        let currentTab = 'all';
         let currentPage = 1;
         const itemsPerPage = 6;
+
+        $(document).ready(function() {
+            // Re-render cards when a checkbox is toggled
+            $('.platform-checkbox').on('change', function() {
+                currentPage = 1; // Reset to first page
+                displayCards();
+            });
+
+            // Initial load
+            displayCards();
+        });
 
         function getSourceStyle(source) {
             if (!source) return "bg-gray-300 text-gray-700";
@@ -226,12 +272,18 @@
 
         // Display cards based on the current tab and page
         function displayCards() {
-            const section = document.getElementById(currentTab);
+            const selectedPlatforms = $('.platform-checkbox:checked').map((_, el) => el.value).get();
+            const section = document.getElementById('results');
             section.innerHTML = ''; // Clear existing cards
+
+            // Filter and sort data
+            const filteredData = data.all
+                .filter(item => selectedPlatforms.includes(item.source.toLowerCase()))
+                .sort((a, b) => b.similarity - a.similarity);
 
             const start = (currentPage - 1) * itemsPerPage;
             const end = start + itemsPerPage;
-            const currentData = [...data[currentTab]].sort((a, b) => b.similarity - a.similarity).slice(start, end);
+            const currentData = filteredData.slice(start, end);
             console.log(currentData);
             currentData.forEach(item => {
                 const card = document.createElement('div');
@@ -260,6 +312,8 @@
     `;
                 section.appendChild(card);
             });
+
+            updatePagination(filteredData.length);
         }
 
         // Get dynamic color based on similarity
@@ -269,38 +323,38 @@
             return 'red';
         }
 
-        // Switch tab
-        function showTab(tab) {
-            // // Debug: Periksa apakah elements ditemukan
-            // const sections = document.querySelectorAll('.results-section');
-            // console.log("Found sections:", sections.length);
+        // // Switch tab
+        // function showTab(tab) {
+        //     // // Debug: Periksa apakah elements ditemukan
+        //     // const sections = document.querySelectorAll('.results-section');
+        //     // console.log("Found sections:", sections.length);
 
-            // // Debug: Periksa tiap section
-            // sections.forEach(section => {
-            //     console.log("Section ID:", section.id);
-            //     console.log("Current classes:", section.classList);
-            //     section.classList.add('hidden');
-            //     console.log("After adding hidden:", section.classList);
-            // });
-            document.querySelectorAll('.results-section').forEach(section => {
-                section.style.display = 'none';
-            });
-            document.getElementById(tab).style.display = "grid";
+        //     // // Debug: Periksa tiap section
+        //     // sections.forEach(section => {
+        //     //     console.log("Section ID:", section.id);
+        //     //     console.log("Current classes:", section.classList);
+        //     //     section.classList.add('hidden');
+        //     //     console.log("After adding hidden:", section.classList);
+        //     // });
+        //     document.querySelectorAll('.results-section').forEach(section => {
+        //         section.style.display = 'none';
+        //     });
+        //     document.getElementById(tab).style.display = "grid";
 
-            // Update active tab button
-            document.querySelectorAll('button').forEach(btn => {
-                btn.classList.remove('text-blue-600', 'border-b-2', 'border-blue-600');
-                btn.classList.add('text-gray-600');
-            });
+        //     // Update active tab button
+        //     document.querySelectorAll('button').forEach(btn => {
+        //         btn.classList.remove('text-blue-600', 'border-b-2', 'border-blue-600');
+        //         btn.classList.add('text-gray-600');
+        //     });
 
-            // Highlight active tab button
-            document.querySelector(`button[onclick="showTab('${tab}')"]`).classList.add('text-blue-600', 'border-b-2', 'border-blue-600');
+        //     // Highlight active tab button
+        //     document.querySelector(`button[onclick="showTab('${tab}')"]`).classList.add('text-blue-600', 'border-b-2', 'border-blue-600');
 
-            currentTab = tab;
-            currentPage = 1;
-            updatePagination();
-            displayCards();
-        }
+        //     currentTab = tab;
+        //     currentPage = 1;
+        //     updatePagination();
+        //     displayCards();
+        // }
 
         // Update pagination
         function updatePagination() {
@@ -309,7 +363,9 @@
 
         // Next page
         function nextPage() {
-            const maxPage = Math.ceil(data[currentTab].length / itemsPerPage);
+            const selectedPlatforms = $('.platform-checkbox:checked').map((_, el) => el.value).get();
+            const maxPage = Math.ceil(data.all.filter(item => selectedPlatforms.includes(item.source.toLowerCase())).length / itemsPerPage);
+
             if (currentPage < maxPage) {
                 currentPage++;
                 updatePagination();
