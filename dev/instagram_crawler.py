@@ -8,6 +8,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import preprocessing  # Import preprocessing.py
+import similarity
 
 # Handle encoding
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
@@ -23,7 +24,7 @@ results = []
 # Combine all keyword arguments into a single string
 keyword = " ".join(sys.argv[1:])
 keyword = preprocessing.stemmer_and_remove_stopwords(
-          preprocessing.remove_prepocessing(keyword)
+          preprocessing.preprocess_text(keyword)
         )
 
 # Setup Selenium Chrome options
@@ -43,27 +44,27 @@ except Exception as e:
     print(f"Failed to initialize WebDriver: {e}")
     sys.exit(1)
 
-# Instagram login
-username = "dummy_ig_iir"  # Replace with your Instagram username
-password = "dummyinstagram"  # Replace with your Instagram password
+# # Instagram login
+# username = "dummy_ig_iir"  # Replace with your Instagram username
+# password = "dummyinstagram"  # Replace with your Instagram password
 
-try:
-    wd.get("https://www.instagram.com/accounts/login/")
-    WebDriverWait(wd, 30).until(EC.presence_of_element_located((By.NAME, "username")))
+# try:
+#     wd.get("https://www.instagram.com/accounts/login/")
+#     WebDriverWait(wd, 30).until(EC.presence_of_element_located((By.NAME, "username")))
 
-    wd.find_element(By.NAME, "username").send_keys(username)
-    wd.find_element(By.NAME, "password").send_keys(password)
+#     wd.find_element(By.NAME, "username").send_keys(username)
+#     wd.find_element(By.NAME, "password").send_keys(password)
 
-    login_button = WebDriverWait(wd, 10).until(
-        EC.element_to_be_clickable((By.XPATH, "//button[contains(., 'Log in') or contains(., 'Masuk')]"))
-    )
-    login_button.click()
+#     login_button = WebDriverWait(wd, 10).until(
+#         EC.element_to_be_clickable((By.XPATH, "//button[contains(., 'Log in') or contains(., 'Masuk')]"))
+#     )
+#     login_button.click()
 
-    WebDriverWait(wd, 30).until(EC.url_changes("https://www.instagram.com/accounts/login/"))
-except Exception as e:
-    print(f"Failed to log in: {e}")
-    wd.quit()
-    sys.exit(1)
+#     WebDriverWait(wd, 30).until(EC.url_changes("https://www.instagram.com/accounts/login/"))
+# except Exception as e:
+#     print(f"Failed to log in: {e}")
+#     wd.quit()
+#     sys.exit(1)
 
 # Search Instagram posts on Google
 query = "site:instagram.com+inurl:/p/+" + keyword
@@ -98,12 +99,13 @@ if not google_links:
     sys.exit(1)
 
 # Display results
-def display_results(original_text, preprocessed_text, similarity=0):
+def display_results(original_text, preprocessed_text, cosine_similarity, asymetric_similarity):
     result = {
         "source": "Instagram",
         "text": original_text,
         "preprocessed": preprocessed_text,
-        "similarity": similarity
+        "cosine_similarity": cosine_similarity,
+        "asymetric_similarity": asymetric_similarity
     }
     results.append(result)
     # print(f"Original Text: {original_text}")
@@ -150,14 +152,15 @@ for idx, link in enumerate(google_links):
         pass
     
     preprocessed_text = preprocessing.stemmer_and_remove_stopwords(
-            preprocessing.remove_prepocessing(original_text)
+            preprocessing.preprocess_text(original_text)
         )
     
     # Similarity
-    similarity = 0 # Panggil function perhitungan similaritas disini
+    cosine_similarity = similarity.calculateCosineSimilarity(preprocessed_text, keyword)
+    asymetric_similarity = similarity.calculateAsymmetricSimilarity(preprocessed_text, keyword)
 
     # Bandingkan caption dan komentar terbaik
-    display_results(original_text, preprocessed_text, similarity)
+    display_results(original_text, preprocessed_text, cosine_similarity, asymetric_similarity)
 
 # Send json
 json_output = json.dumps(results, ensure_ascii=False, indent=4)

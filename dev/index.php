@@ -14,23 +14,23 @@
     <header class="bg-blue-600 text-white py-4">
         <div class="container mx-auto flex justify-between items-center">
             <h1 class="text-2xl font-bold">KEPO.COM</h1>
+            <div class="flex">
+                <button type="submit" id="homeButton" class="px-4 py-2 bg-blue-300 text-white rounded-lg">Home</button>
+                <button type="submit" id="resultButton" class="ml-5 px-4 py-2 bg-blue-300 text-white rounded-lg">Result</button>
+            </div>
         </div>
     </header>
 
     <!-- Form Input -->
     <div id="input" class="container mx-auto my-8">
+        <div class="flex column justify-center items-center">
+
+        </div>
         <h2 class="text-lg font-bold mb-4">SEARCHING DATA</h2>
         <form id="searchForm" class="space-y-4">
             <div>
                 <label class="font-bold">Keyword:</label>
                 <input type="text" name="keyword" id="keyword" class="p-2 border border-gray-300 rounded-lg w-full" required>
-            </div>
-            <div>
-                <label class="font-bold">Similarity Method:</label>
-                <div class="space-x-4">
-                    <label><input type="radio" name="method" value="Minkowski" checked> Minkowski</label>
-                    <label><input type="radio" name="method" value="Canberra"> Canberra</label>
-                </div>
             </div>
             <button type="submit" id="searchButton" class="px-4 py-2 bg-blue-600 text-white rounded-lg">Search</button>
         </form>
@@ -146,7 +146,7 @@
                     dataType: 'json',
                     success: function(response) {
                         // Reset tombol ke state awal
-                        $('#searchButton').text('Search').prop('disabled', false).removeClass('bg-gray-400 text-white');
+                        $('#searchButton').text('Search').prop('disabled', false).removeClass('bg-gray-400');
 
                         // Sembunyikan form input
                         $('#input').addClass('hidden');
@@ -305,9 +305,13 @@
         <div class="mt-4">
             <span class="font-bold text-sm">Similarity:</span>
             <div class="w-full bg-gray-200 rounded-full h-4">
-                <div class="h-4 rounded-full" style="width: ${item.similarity}%; background-color: ${getColor(item.similarity)};"></div>
+                <div class="h-4 rounded-full" style="width: ${parseFloat(item.cosine_similarity) * 100}%; background-color: ${getColor(parseFloat(item.cosine_similarity) * 100)};"></div>
             </div>
-            <span class="text-sm text-gray-600">${item.similarity}%</span>
+            <span class="text-sm text-gray-600">${item.cosine_similarity}</span>
+            <div class="w-full bg-gray-200 rounded-full h-4">
+                <div class="h-4 rounded-full" style="width: ${parseFloat(item.asymetric_similarity) * 100}%; background-color: ${getColor(parseFloat(item.asymetric_similarity) * 100)};"></div>
+            </div>
+            <span class="text-sm text-gray-600">${item.asymetric_similarity}</span>
         </div>
     `;
                 section.appendChild(card);
@@ -384,6 +388,21 @@
 
         // Initial load
         displayCards();
+
+        $(document).ready(function() {
+            // Re-render cards when a checkbox is toggled
+            $('#homeButton').on('click', function() {
+                $('#result').addClass('hidden');
+                $('#input').removeClass('hidden');
+            });
+        });
+        $(document).ready(function() {
+            // Re-render cards when a checkbox is toggled
+            $('#resultButton').on('click', function() {
+                $('#input').addClass('hidden');
+                $('#result').removeClass('hidden');
+            });
+        });
     </script>
 
 </body>

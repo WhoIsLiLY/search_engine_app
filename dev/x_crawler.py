@@ -8,6 +8,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import preprocessing  # Import preprocessing module for preprocessing
+import similarity
 
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
@@ -87,7 +88,7 @@ def is_logged_in():
 
 keyword = " ".join(sys.argv[1:])
 keyword = preprocessing.stemmer_and_remove_stopwords(
-          preprocessing.remove_prepocessing(keyword)
+          preprocessing.preprocess_text(keyword)
         )
 x_links = []
 
@@ -97,7 +98,7 @@ try:
         perform_login()
         wd.get(f"https://x.com/search?q={keyword}&f=media")
 
-    while len(x_links) < 8:
+    while len(x_links) < 2:
         time.sleep(3)
         try:
             x_results = wd.find_elements(By.CSS_SELECTOR, 'li.css-175oi2r a')
@@ -105,7 +106,7 @@ try:
                 link = result.get_attribute('href')
                 if "/photo/" in link and link not in x_links:
                     x_links.append(link)
-                    if len(x_links) >= 8:
+                    if len(x_links) >= 2:
                         break
         except Exception as e:
             print(f"Failed to fetch X search results: {e}")
@@ -119,12 +120,13 @@ finally:
         sys.exit(1)
 
 # Display Result
-def display_results(original_text, preprocessed_text, similarity=0):
+def display_results(original_text, preprocessed_text, cosine_similarity, asymetric_similarity):
     result = {
         "source": "X",
         "text": original_text,
         "preprocessed": preprocessed_text,
-        "similarity": similarity
+        "cosine_similarity": cosine_similarity,
+        "asymetric_similarity": asymetric_similarity
     }
     results.append(result)
 
@@ -170,13 +172,14 @@ for idx, link in enumerate(x_links):
         pass
 
     preprocessed_text = preprocessing.stemmer_and_remove_stopwords(
-                preprocessing.remove_prepocessing(original_text)
+                preprocessing.preprocess_text(original_text)
             )
     
     # Similarity
-    similarity = 0 # Panggil function perhitungan similaritas disini
+    cosine_similarity = similarity.calculateCosineSimilarity(preprocessed_text, keyword)
+    asymetric_similarity = similarity.calculateAsymmetricSimilarity(preprocessed_text, keyword)
 
-    display_results(original_text, preprocessed_text, similarity=0)
+    display_results(original_text, preprocessed_text, cosine_similarity, asymetric_similarity)
 
 # Send json
 json_output = json.dumps(results, ensure_ascii=False, indent=4)
