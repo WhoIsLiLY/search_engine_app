@@ -7,6 +7,7 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import TimeoutException, StaleElementReferenceException
 import preprocessing  # Import preprocessing module for preprocessing
 import similarity
 
@@ -90,6 +91,8 @@ keyword = " ".join(sys.argv[1:])
 keyword = preprocessing.stemmer_and_remove_stopwords(
           preprocessing.preprocess_text(keyword)
         )
+
+# keyword = "ppn 12"
 x_links = []
 
 try:
@@ -123,59 +126,90 @@ finally:
 def display_results(original_text, preprocessed_text, cosine_similarity, asymetric_similarity):
     result = {
         "source": "X",
-        "text": original_text,
-        "preprocessed": preprocessed_text,
+        "text_caption": original_text["caption"],
+        "preprocessed_caption": preprocessed_text["caption"],
+        "text_comments": original_text["comments"],
+        "preprocessed_comments": preprocessed_text["comments"],
         "cosine_similarity": cosine_similarity,
         "asymetric_similarity": asymetric_similarity
     }
     results.append(result)
 
-    # print(f"Source: {source}")
-    # print("")
-    # print(f"Original text: {original_text}")
-    # print("")
-    # print(f"Preprocessed text: {preprocessed_text}")
-    # print("")
-    # print(f"Similarity: {similarity:.4f}")
-    # print("-" * 60)
+def wait_for_element(driver, selector, timeout=10):
+    """Helper function to wait for element and handle exceptions"""
+    try:
+        element = WebDriverWait(driver, timeout).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, selector))
+        )
+        return element
+    except TimeoutException:
+        return None
 
 # Process each post link
 for idx, link in enumerate(x_links):
     wd.get(link)
-    time.sleep(2)
-
-    original_text = ""
-    preprocessed_text = ""
-
-    # Get Account name (nti diganti jadi x, instgram, atau youtube)
-    try:
-        account = WebDriverWait(wd, 10).until(
-            EC.presence_of_element_located((By.CSS_SELECTOR, "[data-testid='User-Name']"))).text
-    except:
-        account = "Account not available"
-
-    # Get description 
-    try:
-        original_text += " " + wd.find_element(By.CSS_SELECTOR, "[data-testid='tweetText']").text
-    except:
-        description = "No description available"
-
-    # Get comment
-    try:
-        div_elements = wd.find_elements(By.CSS_SELECTOR, "[data-testid='cellInnerDiv']")
-        for div in div_elements:
-            try:
-                original_text += " " + div.find_element(By.CSS_SELECTOR, "[data-testid='tweetText']").text
-            except:
-                pass
-    except:
-        pass
-
-    preprocessed_text = preprocessing.stemmer_and_remove_stopwords(
-                preprocessing.preprocess_text(original_text)
-            )
     
-    # Similarity
+    original_text = {
+        "caption": "",
+        "comments": []
+    }
+    preprocessed_text = {
+        "caption": "",
+        "comments": []
+    }
+
+    # Get caption - wait for tweet text to be present
+    try:
+        caption_element = wait_for_element(wd, "[data-testid='tweetText']")
+        if caption_element:
+            original_caption = " " + caption_element.text
+            preprocessed_caption = preprocessing.stemmer_and_remove_stopwords(
+                preprocessing.preprocess_text(original_caption)
+            )
+        else:
+            original_caption = ""
+            preprocessed_caption = ""
+    except:
+        original_caption = ""
+        preprocessed_caption = ""
+    
+    original_text["caption"] = original_caption
+    preprocessed_text["caption"] = preprocessed_caption
+    
+    # Get comments - wait for comments container
+    try:
+        # Wait for comments to load
+        comments_loaded = wait_for_element(wd, "[data-testid='cellInnerDiv']")
+        if comments_loaded:
+            # Use explicit wait with multiple attempts for handling dynamic loading
+            for attempt in range(3):  # Try up to 3 times
+                try:
+                    div_elements = WebDriverWait(wd, 5).until(
+                        EC.presence_of_all_elements_located((By.CSS_SELECTOR, "[data-testid='cellInnerDiv']"))
+                    )
+                    
+                    for div in div_elements[1:]:
+                        try:
+                            # Wait for each comment text to be loaded
+                            comment_element = WebDriverWait(div, 3).until(
+                                EC.presence_of_element_located((By.CSS_SELECTOR, "[data-testid='tweetText']"))
+                            )
+                            comment = comment_element.text
+                            preprocessed_comments = preprocessing.stemmer_and_remove_stopwords(
+                                preprocessing.preprocess_text(comment)
+                            )
+                            original_text["comments"].append(comment)
+                            preprocessed_text["comments"].append(preprocessed_comments)
+                        except (TimeoutException, StaleElementReferenceException):
+                            continue
+                    break  # If successful, break the retry loop
+                except (TimeoutException, StaleElementReferenceException):
+                    if attempt == 2:  # Last attempt
+                        print(f"Failed to load comments after {attempt + 1} attempts")
+    except Exception as e:
+        print(f"Error loading comments: {str(e)}")
+    
+    # Calculate Similarity
     cosine_similarity = similarity.calculateCosineSimilarity(preprocessed_text, keyword)
     asymetric_similarity = similarity.calculateAsymmetricSimilarity(preprocessed_text, keyword)
 

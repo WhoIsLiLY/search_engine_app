@@ -294,7 +294,7 @@
             // Filter and sort data
             const filteredData = data.all
                 .filter(item => selectedPlatforms.includes(item.source.toLowerCase()))
-                .sort((a, b) => b.similarity - a.similarity);
+                .sort((a, b) => b.similarity - a.similarity); // descending. kalau ascending a-b
 
             const start = (currentPage - 1) * itemsPerPage;
             const end = start + itemsPerPage;
@@ -311,11 +311,11 @@
         </div>
         <div class="bg-white rounded-lg p-4 relative border border-gray-300 h-40 overflow-y-auto">
             <h2 class="font-bold text-lg">Original Text:</h2>
-            <p class="text-gray-700">${item.text}</p>
+            <p class="text-gray-700">...</p>
         </div>
         <div class="bg-white rounded-lg p-4 relative border border-gray-300 mt-4 h-40 overflow-y-auto">
             <h2 class="font-bold text-lg">Preprocessed Text:</h2>
-            <p class="text-gray-500">${item.preprocessed}</p>
+            <p class="text-gray-500">...</p>
         </div>
         <div class="mt-4">
             <span class="font-bold text-sm">Similarity:</span>

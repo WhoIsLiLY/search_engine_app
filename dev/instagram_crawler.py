@@ -102,58 +102,68 @@ if not google_links:
 def display_results(original_text, preprocessed_text, cosine_similarity, asymetric_similarity):
     result = {
         "source": "Instagram",
-        "text": original_text,
-        "preprocessed": preprocessed_text,
+        "text_caption": original_text["caption"],
+        "preprocessed_caption": preprocessed_text["caption"],
+        "text_comments": original_text["comments"],
+        "preprocessed_comments": preprocessed_text["comments"],
         "cosine_similarity": cosine_similarity,
         "asymetric_similarity": asymetric_similarity
     }
     results.append(result)
-    # print(f"Original Text: {original_text}")
-    # print("")
-    # print(f"Preprocessed Text: {preprocessed_text}")
-    # print("")
-    # print(f"Similarity: {similarity:.4f}")
-    # print("-" * 60)
-
 
 for idx, link in enumerate(google_links):
     wd.get(link)
     time.sleep(2)
 
-    original_text = ""
-    preprocessed_text = ""
+    original_text = {
+        "caption": "",
+        "comments": []
+    }
+    preprocessed_text = {
+        "caption": "",
+        "comments": []
+    }
  
-    # Get account name
-    try:
-        account = WebDriverWait(wd, 10).until(
-            EC.presence_of_element_located((By.CSS_SELECTOR, "span.x1vvkbs"))
-        ).text
-    except:
-        account = "Account not available"
+    # # Get account name
+    # try:
+    #     account = WebDriverWait(wd, 10).until(
+    #         EC.presence_of_element_located((By.CSS_SELECTOR, "span.x1vvkbs"))
+    #     ).text
+    # except:
+    #     account = "Account not available"
 
     # Get caption
     try:
-        original_text += " " + wd.find_element(By.CSS_SELECTOR, "h1._aade").text
-        # preprocessed_caption = preprocessing.stemmer_and_remove_stopwords(
-        #     preprocessing.remove_prepocessing(caption)
-        # )
+        original_caption =  " " + wd.find_element(By.CSS_SELECTOR, "h1._aade").text
+        preprocessed_caption = preprocessing.stemmer_and_remove_stopwords(
+            preprocessing.preprocess_text(original_caption)
+        )
     except:
-        caption = "No caption available"
-
+        original_caption = ""
+        preprocessed_caption = ""
+    
+    original_text["caption"] = original_caption
+    preprocessed_text["caption"] = preprocessed_caption
+    
     # Get comments
     try:
         comments = wd.find_elements(By.CSS_SELECTOR, "ul._a9ym li span._aaco")
         for comment in comments:
             try:
-                original_text += " " + comment.text  # Ambil teks komentar
+                preprocessed_comments = preprocessing.stemmer_and_remove_stopwords(
+                    preprocessing.preprocess_text(comment.text)
+                )
+                original_text["comments"].append(comment.text)  # Ambil teks komentar
+                preprocessed_text["comments"].append(preprocessed_comments)
             except:
                 pass
+        
     except:
         pass
-    
-    preprocessed_text = preprocessing.stemmer_and_remove_stopwords(
-            preprocessing.preprocess_text(original_text)
-        )
+
+    # preprocessed_text = preprocessing.stemmer_and_remove_stopwords(
+    #         preprocessing.preprocess_text(original_text)
+    #     )
     
     # Similarity
     cosine_similarity = similarity.calculateCosineSimilarity(preprocessed_text, keyword)
