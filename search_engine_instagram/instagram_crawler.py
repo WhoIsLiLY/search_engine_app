@@ -100,6 +100,7 @@ if not google_links:
 # Display results
 def display_results(original_text, preprocessed_text, similarity=0):
     result = {
+        "Source": "Instagram",
         "Original Text": original_text,
         "Preprocessed Text": preprocessed_text,
         "Similarity": similarity

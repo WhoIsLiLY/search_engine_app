@@ -1,6 +1,6 @@
 <?php
 $keyword = $_POST['keyword'];
-$output = shell_exec("python x_crawler.py $keyword");
+$output = shell_exec("python youtube_crawler.py $keyword");
 
 echo "<b><a href='index.php'>< Back to Home</a></b><br><br>";
 echo "<h1>RAW</h1>";

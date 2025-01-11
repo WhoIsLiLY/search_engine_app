@@ -12,13 +12,13 @@ def preprocess_text(text):
         if hashtag[1:].islower() and "" not in hashtag:
             return hashtag[1:]
 
-        elif "" in hashtag:
+        elif "" in hashtag:  # Perbaikan logika pada tanda underscore
             # Case khusus 1
-            if hashtag[1].islower() and any(c.isupper() for c in hashtag.split("")[1:]):
+            if hashtag[1].islower() and any(c.isupper() for c in list(hashtag[1:])):
                 return hashtag[1:].replace("", " ")
-            # Case khusus 2 & Pola 2: Remove hashtag + ganti  dengan spasi
+            # Case khusus 2 & Pola 2: Remove hashtag + ganti dengan spasi
             else:
-                return hashtag[1:].replace("_", " ")
+                return hashtag[1:].replace("", " ")
 
         # Pola 3: Remove hashtag + tambahkan spasi
         else:

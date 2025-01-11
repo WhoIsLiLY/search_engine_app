@@ -14,7 +14,7 @@ api_key = os.getenv('API_KEY')
 keyword = "Terima kasih pak Jokowi"  # Ganti dengan keyword yang diinginkan
 keyword = " ".join(sys.argv[1:])
 keyword = preprocessing.stemmer_and_remove_stopwords(
-          preprocessing.remove_prepocessing(keyword)
+          preprocessing.preprocess_text(keyword)
         )
 
 # URL untuk pencarian video berdasarkan keyword
