@@ -2,3 +2,4 @@ selenium
 sastrawi
 emoji
 python-dotenv
+tweepy

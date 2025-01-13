@@ -22,7 +22,10 @@ sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 results = []
 
 # Combine all keyword arguments into a single string
-keyword = "prabowo"
+keyword = " ".join(sys.argv[1:])
+keyword = preprocessing.stemmer_and_remove_stopwords(
+          preprocessing.preprocess_text(keyword)
+        )
 
 # Setup Selenium Chrome options
 chrome_options = Options()
@@ -157,10 +160,17 @@ for idx, link in enumerate(google_links):
             for comment in current_comments:
                 comment_text = comment.text.strip()
                 if comment_text not in original_comments:
-                    original_comments.append(comment_text)
-                    preprocessed_comments.append(preprocessing.stemmer_and_remove_stopwords(preprocessing.preprocess_text(comment_text)))
-                    if len(original_comments) >= 10:
-                        break
+                    keyword_list = keyword.split()
+                    preprocessed_comment = preprocessing.stemmer_and_remove_stopwords(preprocessing.preprocess_text(comment_text))
+                    
+                    # Cek apakah ada satu atau lebih kata dari keyword_list dalam preprocessed_comment
+                    if any(word in preprocessed_comment.split() for word in keyword_list):
+                        original_comments.append(comment_text)
+                        preprocessed_comments.append(preprocessed_comment)
+                        if len(original_comments) >= 10:
+                            break
+                    else:
+                        continue
 
             try:
                 # Tunggu hingga tombol 'load more' tersedia

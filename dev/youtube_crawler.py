@@ -27,7 +27,7 @@ keyword = preprocessing.stemmer_and_remove_stopwords(
         )
 
 # URL untuk pencarian video berdasarkan keyword
-search_url = f"https://www.googleapis.com/youtube/v3/search?key={api_key}&q={requests.utils.quote(keyword)}&part=snippet&type=video&maxResults=10"
+search_url = f"https://www.googleapis.com/youtube/v3/search?key={api_key}&q={requests.utils.quote(keyword)}&part=snippet&type=video&maxResults=15"
 
 def display_results(original_text, preprocessed_text, cosine_similarity, asymetric_similarity):
     result = {
@@ -80,6 +80,8 @@ search_results = fetch_youtube_data(search_url)
 
 if search_results.get('items'):
     for item in search_results['items']:
+        if len(results) >= 5:
+            break
         original_text = {
             "caption": "",
             "comments": []
