@@ -37,21 +37,19 @@ def preprocess_text(text):
             processed_text += process_hashtag(word)
         else:
             processed_text += word + " "
-    # # Lowercase
-    # processed_text = processed_text.lower()
+    # Lowercase
+    processed_text = processed_text.lower()
 
-    # # Remove mentions and links
-    # processed_text = re.sub(r'@\w+', '', processed_text)
-    # processed_text = re.sub(r'http\S+|www.\S+', '', processed_text)
+    # Remove mentions and links
+    processed_text = re.sub(r'@\w+', '', processed_text)
+    processed_text = re.sub(r'http\S+|www.\S+', '', processed_text)
 
-    
+    # Remove symbols and emoji
+    processed_text = re.sub(r'[^\w\s]', '', processed_text)
+    processed_text = emoji.replace_emoji(processed_text, replace='')
 
-    # # Remove symbols and emoji
-    # processed_text = re.sub(r'[^\w\s]', '', processed_text)
-    # processed_text = emoji.replace_emoji(processed_text, replace='')
-
-    # # Remove extra spaces
-    # processed_text = re.sub(r'\s+', ' ', processed_text).strip()
+    # Remove extra spaces
+    processed_text = re.sub(r'\s+', ' ', processed_text).strip()
 
     return processed_text
 

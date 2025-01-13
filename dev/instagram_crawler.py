@@ -13,22 +13,20 @@ import similarity
 # Handle encoding
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
-# Validate keyword argument
-if len(sys.argv) < 2:
-    print("Error: Keyword argument is missing. Usage: python instagram_crawler.py <keyword>")
-    sys.exit(1)
+# # Validate keyword argument
+# if len(sys.argv) < 2:
+#     print("Error: Keyword argument is missing. Usage: python instagram_crawler.py <keyword>")
+#     sys.exit(1)
 
 # List of Dictionaries to save the result
 results = []
 
 # Combine all keyword arguments into a single string
-keyword = " ".join(sys.argv[1:])
-keyword = preprocessing.stemmer_and_remove_stopwords(
-          preprocessing.preprocess_text(keyword)
-        )
+keyword = "prabowo"
 
 # Setup Selenium Chrome options
 chrome_options = Options()
+# chrome_options.add_argument("--headless")
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-gpu")
 chrome_options.add_argument("start-maximized")
@@ -44,27 +42,27 @@ except Exception as e:
     print(f"Failed to initialize WebDriver: {e}")
     sys.exit(1)
 
-# # Instagram login
-# username = "dummy_ig_iir"  # Replace with your Instagram username
-# password = "dummyinstagram"  # Replace with your Instagram password
+# Instagram login
+username = "dummy_ig_iir"  # Replace with your Instagram username
+password = "dummyinstagram"  # Replace with your Instagram password
 
-# try:
-#     wd.get("https://www.instagram.com/accounts/login/")
-#     WebDriverWait(wd, 30).until(EC.presence_of_element_located((By.NAME, "username")))
+try:
+    wd.get("https://www.instagram.com/accounts/login/")
+    WebDriverWait(wd, 30).until(EC.presence_of_element_located((By.NAME, "username")))
 
-#     wd.find_element(By.NAME, "username").send_keys(username)
-#     wd.find_element(By.NAME, "password").send_keys(password)
+    wd.find_element(By.NAME, "username").send_keys(username)
+    wd.find_element(By.NAME, "password").send_keys(password)
 
-#     login_button = WebDriverWait(wd, 10).until(
-#         EC.element_to_be_clickable((By.XPATH, "//button[contains(., 'Log in') or contains(., 'Masuk')]"))
-#     )
-#     login_button.click()
+    login_button = WebDriverWait(wd, 10).until(
+        EC.element_to_be_clickable((By.XPATH, "//button[contains(., 'Log in') or contains(., 'Masuk')]"))
+    )
+    login_button.click()
 
-#     WebDriverWait(wd, 30).until(EC.url_changes("https://www.instagram.com/accounts/login/"))
-# except Exception as e:
-#     print(f"Failed to log in: {e}")
-#     wd.quit()
-#     sys.exit(1)
+    WebDriverWait(wd, 30).until(EC.url_changes("https://www.instagram.com/accounts/login/"))
+except Exception as e:
+    print(f"Failed to log in: {e}")
+    wd.quit()
+    sys.exit(1)
 
 # Search Instagram posts on Google
 query = "site:instagram.com+inurl:/p/+" + keyword
@@ -147,19 +145,49 @@ for idx, link in enumerate(google_links):
     
     # Get comments
     try:
-        comments = wd.find_elements(By.CSS_SELECTOR, "ul._a9ym li span._aaco")
-        for comment in comments:
+        original_comments = []
+        preprocessed_comments = []
+        wait = WebDriverWait(wd, 10)  # Tunggu maksimal 10 detik
+
+        while len(original_comments) < 10:  # Loop hingga setidaknya 10 komentar diambil
+            # Tunggu hingga elemen komentar tersedia
+            wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "ul._a9ym li span._aaco")))
+            current_comments = wd.find_elements(By.CSS_SELECTOR, "ul._a9ym li span._aaco")
+
+            for comment in current_comments:
+                comment_text = comment.text.strip()
+                if comment_text not in original_comments:
+                    original_comments.append(comment_text)
+                    preprocessed_comments.append(preprocessing.stemmer_and_remove_stopwords(preprocessing.preprocess_text(comment_text)))
+                    if len(original_comments) >= 10:
+                        break
+
             try:
-                preprocessed_comments = preprocessing.stemmer_and_remove_stopwords(
-                    preprocessing.preprocess_text(comment.text)
-                )
-                original_text["comments"].append(comment.text)  # Ambil teks komentar
-                preprocessed_text["comments"].append(preprocessed_comments)
+                # Tunggu hingga tombol 'load more' tersedia
+                load_more_button = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "button._abl-")))
+                load_more_button.click()
+                time.sleep(2)  # Tambahkan delay agar elemen baru dapat dimuat
             except:
-                pass
+                break
+
+        preprocessed_text["comments"] = preprocessed_comments[:10]
+        original_text["comments"] = original_comments[:10]
+    except Exception as e:
+        print(f"Error while fetching comments: {e}")
+    # try:
+    #     comments = wd.find_elements(By.CSS_SELECTOR, "ul._a9ym li span._aaco")
+    #     for comment in comments:
+    #         try:
+    #             preprocessed_comments = preprocessing.stemmer_and_remove_stopwords(
+    #                 preprocessing.preprocess_text(comment.text)
+    #             )
+    #             original_text["comments"].append(comment.text)  # Ambil teks komentar
+    #             preprocessed_text["comments"].append(preprocessed_comments)
+    #         except:
+    #             pass
         
-    except:
-        pass
+    # except:
+    #     pass
 
     # preprocessed_text = preprocessing.stemmer_and_remove_stopwords(
     #         preprocessing.preprocess_text(original_text)

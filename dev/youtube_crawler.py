@@ -1,10 +1,14 @@
 import os
 import sys
+import io
+import re
 import requests
 from dotenv import load_dotenv
 import preprocessing
 import similarity
 import json
+
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
 # Load file .env
 load_dotenv()
@@ -16,14 +20,14 @@ api_key = os.getenv('API_KEY')
 results = []
 
 # Keyword pencarian
-keyword = "Terima kasih pak Jokowi"  # Ganti dengan keyword yang diinginkan
-# keyword = " ".join(sys.argv[1:])
-# keyword = preprocessing.stemmer_and_remove_stopwords(
-#           preprocessing.preprocess_text(keyword)
-#         )
+# keyword = "Terima kasih pak Jokowi"  # Ganti dengan keyword yang diinginkan
+keyword = " ".join(sys.argv[1:])
+keyword = preprocessing.stemmer_and_remove_stopwords(
+          preprocessing.preprocess_text(keyword)
+        )
 
 # URL untuk pencarian video berdasarkan keyword
-search_url = f"https://www.googleapis.com/youtube/v3/search?key={api_key}&q={requests.utils.quote(keyword)}&part=snippet&type=video&maxResults=5"
+search_url = f"https://www.googleapis.com/youtube/v3/search?key={api_key}&q={requests.utils.quote(keyword)}&part=snippet&type=video&maxResults=10"
 
 def display_results(original_text, preprocessed_text, cosine_similarity, asymetric_similarity):
     result = {
@@ -36,6 +40,31 @@ def display_results(original_text, preprocessed_text, cosine_similarity, asymetr
         "asymetric_similarity": asymetric_similarity
     }
     results.append(result)
+
+def parse_duration(duration):
+    """
+    Parse ISO 8601 duration string and return total minutes
+    Example: PT1M1S -> 1 minute, PT7M4S -> 7 minutes
+    """
+    minutes = 0
+    
+    # Extract minutes
+    minutes_match = re.search(r'(\d+)M', duration)
+    if minutes_match:
+        minutes = int(minutes_match.group(1))
+    
+    return minutes
+
+def is_shorts(video_id):
+    video_detail_url = f"https://www.googleapis.com/youtube/v3/videos?key={api_key}&id={video_id}&part=contentDetails"
+    video_details = fetch_youtube_data(video_detail_url)
+    
+    if video_details.get('items'):
+        duration = video_details['items'][0]['contentDetails']['duration']
+        minutes = parse_duration(duration)
+        # Consider videos with 1 minute or less as Shorts
+        return minutes <= 1
+    return False
 
 def fetch_youtube_data(url):
     try:
@@ -60,6 +89,8 @@ if search_results.get('items'):
             "comments": []
         }
         video_id = item['id']['videoId']
+        if is_shorts(video_id):
+            continue
         # title = item['snippet']['title']
         # channel_id = item['snippet']['channelId']
         # channel_title = item['snippet']['channelTitle']

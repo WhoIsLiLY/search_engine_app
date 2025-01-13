@@ -15,7 +15,7 @@ sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
 # Set up Chrome options
 chrome_options = Options()
-# chrome_options.add_argument("--headless")  # Run in headless mode if desired
+chrome_options.add_argument("--headless")  # Run in headless mode if desired
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-gpu")
 chrome_options.add_argument("start-maximized")
@@ -29,7 +29,8 @@ wd = webdriver.Chrome(options=chrome_options)
 results = []
 
 # Login details
-username = "dummy_x_iir"  # Replace with your username
+# username = "dummy_x_iir"  # Replace with your username
+username = "XDummy47097"
 password = "dummytwitter"  # Replace with your password
 
 def perform_login():
