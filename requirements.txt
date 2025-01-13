@@ -3,3 +3,5 @@ sastrawi
 emoji
 python-dotenv
 tweepy
+numpy
+scikit-learn

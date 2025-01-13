@@ -21,10 +21,7 @@ results = []
 
 # Keyword pencarian
 # keyword = "Terima kasih pak Jokowi"  # Ganti dengan keyword yang diinginkan
-keyword = " ".join(sys.argv[1:])
-keyword = preprocessing.stemmer_and_remove_stopwords(
-          preprocessing.preprocess_text(keyword)
-        )
+keyword = "shin tae yong"
 
 # URL untuk pencarian video berdasarkan keyword
 search_url = f"https://www.googleapis.com/youtube/v3/search?key={api_key}&q={requests.utils.quote(keyword)}&part=snippet&type=video&maxResults=15"
@@ -60,7 +57,7 @@ def is_shorts(video_id):
     video_details = fetch_youtube_data(video_detail_url)
     
     if video_details.get('items'):
-        duration = video_details['items'][0]['contentDetails']['duration']
+        duration = video_details['items'][0]['contentDetails']['duration'] # PT4M1
         minutes = parse_duration(duration)
         # Consider videos with 1 minute or less as Shorts
         return minutes <= 1

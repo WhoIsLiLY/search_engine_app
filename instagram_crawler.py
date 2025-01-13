@@ -45,27 +45,27 @@ except Exception as e:
     print(f"Failed to initialize WebDriver: {e}")
     sys.exit(1)
 
-# Instagram login
-username = "dummy_ig_iir"  # Replace with your Instagram username
-password = "dummyinstagram"  # Replace with your Instagram password
+# # Instagram login
+# username = "dummy_ig_iir"  # Replace with your Instagram username
+# password = "dummyinstagram"  # Replace with your Instagram password
 
-try:
-    wd.get("https://www.instagram.com/accounts/login/")
-    WebDriverWait(wd, 30).until(EC.presence_of_element_located((By.NAME, "username")))
+# try:
+#     wd.get("https://www.instagram.com/accounts/login/")
+#     WebDriverWait(wd, 30).until(EC.presence_of_element_located((By.NAME, "username")))
 
-    wd.find_element(By.NAME, "username").send_keys(username)
-    wd.find_element(By.NAME, "password").send_keys(password)
+#     wd.find_element(By.NAME, "username").send_keys(username)
+#     wd.find_element(By.NAME, "password").send_keys(password)
 
-    login_button = WebDriverWait(wd, 10).until(
-        EC.element_to_be_clickable((By.XPATH, "//button[contains(., 'Log in') or contains(., 'Masuk')]"))
-    )
-    login_button.click()
+#     login_button = WebDriverWait(wd, 10).until(
+#         EC.element_to_be_clickable((By.XPATH, "//button[contains(., 'Log in') or contains(., 'Masuk')]"))
+#     )
+#     login_button.click()
 
-    WebDriverWait(wd, 30).until(EC.url_changes("https://www.instagram.com/accounts/login/"))
-except Exception as e:
-    print(f"Failed to log in: {e}")
-    wd.quit()
-    sys.exit(1)
+#     WebDriverWait(wd, 30).until(EC.url_changes("https://www.instagram.com/accounts/login/"))
+# except Exception as e:
+#     print(f"Failed to log in: {e}")
+#     wd.quit()
+#     sys.exit(1)
 
 # Search Instagram posts on Google
 query = "site:instagram.com+inurl:/p/+" + keyword
