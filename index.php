@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>KEPO</title>
     <link href="/public/css/output.css" rel="stylesheet">
+    <link href="/public/css/custom.css" rel="stylesheet">
 </head>
 
 <body class="bg-gray-100 text-gray-900">
@@ -13,10 +14,14 @@
     <!-- Header -->
     <header class="bg-blue-600 text-white py-4">
         <div class="container mx-auto flex justify-between items-center">
-            <h1 class="text-2xl font-bold">KEPO.COM</h1>
-            <div class="flex">
-                <button type="submit" id="homeButton" class="px-4 py-2 bg-blue-300 text-white rounded-lg">Home</button>
-                <button type="submit" id="resultButton" class="ml-5 px-4 py-2 bg-blue-300 text-white rounded-lg">Result</button>
+            <!-- <h1 class="text-2xl font-bold">KEPO.COM</h1> -->
+             <div class="logo-container">
+                <img src="/public/image/logo_ubaya.png" alt="Ubaya Logo" class="logo-ubaya">
+                <img src="/public/image/logo_if.png" alt="IF Logo" class="logo-if">
+             </div>
+            <div class="button-container">
+                <button type="submit" id="homeButton" class="homeButton">Home</button>
+                <button type="submit" id="resultButton" class="resultButton">Result</button>
             </div>
         </div>
     </header>
@@ -24,7 +29,7 @@
     <!-- Form Input -->
     <div id="input" class="container mx-auto my-8">
 
-        <form class="flex items-center max-w-sm mx-auto">
+        <!-- <form class="flex items-center max-w-sm mx-auto">
             <label for="simple-search" class="sr-only">Search</label>
             <div class="relative w-full">
                 <div class="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
@@ -40,15 +45,28 @@
                 </svg>
                 <span class="sr-only">Search</span>
             </button>
-        </form>
+        </form> -->
+
 
         <form id="searchForm" class="space-y-4">
+            <div class="search-container">
+                <h1 class="search-tittle">KEPOIN</h1>
+                <div class="search-bar">
+                    <input type="text" placeholder="SEARCH..." class="search-input">
+                    <button type="submit" id="searchButton" class="search-button">
+                        <img src="/public/image/search_icon.png" alt="Search">
+                    </button>
+                </div>
+            </div>
+        </form>
+
+        <!-- <form id="searchForm" class="space-y-4">
             <div class="flex flex-col justify-center items-center">
                 <h2 class="text-lg font-bold mb-4">SEARCHING DATA</h2>
                 <input type="text" name="keyword" id="keyword" class="p-2 border border-gray-300 rounded-lg w-full" required>
                 <button type="submit" id="searchButton" class="px-4 py-2 bg-blue-600 text-white rounded-lg">Search</button>
             </div>
-        </form>
+        </form> -->
     </div>
 
     <!-- Form Result -->
@@ -117,8 +135,8 @@
     </div>
 
     <!-- Footer -->
-    <footer class="bg-gray-800 text-white py-4 mt-8">
-        <div class="container mx-auto text-center">
+    <footer>
+        <div class="footer-container">
             <p>&copy; 2025 KEPO.COM. All rights reserved.</p>
         </div>
     </footer>

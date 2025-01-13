@@ -1,0 +1,111 @@
+/* HEADER */
+.logo-container {
+    display: flex; 
+    gap: 15px; 
+}
+
+.logo-ubaya {
+    width: 150px;
+    height: 50px;
+}
+
+.logo-if {
+    width: 130px;
+    height: 50px;
+}
+
+.button-container {
+    display: flex; /* Gunakan Flexbox untuk mengatur tata letak */
+    justify-content: flex-end; /* Tombol diratakan ke kanan */
+    margin-right: 20px; /* Tambahkan margin kanan jika diperlukan */
+}
+
+button {
+    font-family: Arial, sans-serif;
+    font-size: 16px;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+}
+
+.homeButton {
+    background-color: #63b3ed; 
+    color: white;
+    margin-right: 10px; 
+}
+
+.resultButton {
+    background-color: #63b3ed;
+    color: white;
+}
+  
+
+
+/* FORM INPUT */
+.search-container {
+    margin-top: 150px;
+}
+
+.search-tittle {
+    font-size: 70px;
+    color: #007bff;
+    /* font-family: 'Comic Sans MS', sans-serif; */
+    /* font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif; */
+    /* font-family: Cambria, Cochin, Georgia, Times, 'Times New Roman', serif; */
+    /* font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif; */
+    font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+    text-align: center;
+}
+
+.search-bar {
+    margin-top: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.search-input {
+    width: 650px;
+    padding: 10px;
+    border: 2px solid #007bff;
+    border-radius: 10px 0 0 10px; /* Kurangi kebulatan */
+    font-size: 16px;
+    outline: none;
+    height: 50px;
+    box-sizing: border-box; /* Pastikan padding dihitung dalam tinggi total */
+}
+
+.search-button {
+    background-color: #007bff;
+    border: none;
+    padding: 0 15px; /* Kurangi padding atas-bawah */
+    border-radius: 0 10px 10px 0; /* Kurangi kebulatan */
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 50px; 
+    /* width: 50px */
+}
+
+.search-button img {
+    width: 60px;
+    height: 85px;
+}
+
+
+/* FOOTER */
+footer {
+    background-color: #007bff;
+    color: white;
+    padding: 10px;
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+}
+
+footer p {
+    text-align: center;
+    margin: 0;
+    font-size: 14px;
+}
