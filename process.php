@@ -1,15 +1,39 @@
 <?php
 $keyword = $_POST["keyword"];
+$platforms = $_POST["platforms"];
 
-// Jalankan tiga crawler Python secara terpisah
-$output_instagram = shell_exec("python instagram_crawler.py $keyword");
-$output_x = shell_exec("python x_crawler.py $keyword");
-$output_youtube = shell_exec("python youtube_crawler.py $keyword");
+// Jalankan tiga crawler Python secara terpisah & Decode hasil output masing-masing crawler
+$instagram = array_filter($platforms, function($value) {
+    return strpos($value, 'instagram') !== false;
+});
+$x = array_filter($platforms, function($value) {
+    return strpos($value, 'x') !== false;
+});
+$youtube = array_filter($platforms, function($value) {
+    return strpos($value, 'youtube') !== false;
+});
 
-// Decode hasil output masing-masing crawler
-$results_instagram = json_decode($output_instagram, true);
-$results_x = json_decode($output_x, true);
-$results_youtube = json_decode($output_youtube, true);
+if(!empty($instagram)){
+    $output_instagram = shell_exec("python instagram_crawler.py $keyword");
+    $results_instagram = json_decode($output_instagram, true);
+}else{
+    $results_instagram = null;
+}
+
+if(!empty($x)){
+    $output_x = shell_exec("python x_crawler.py $keyword");
+    $results_x = json_decode($output_x, true);
+}else{
+    $results_x = null;
+}
+
+if(!empty($youtube)){
+    $output_youtube = shell_exec("python youtube_crawler.py $keyword");
+    $results_youtube = json_decode($output_youtube, true);
+}else{
+    $results_youtube = null;
+}
+
 // print_r($results_instagram);
 // print_r($results_youtube);
 // print_r($results_x)

@@ -73,7 +73,7 @@ google_links = []
 seen_links = set()
 start = 0
 
-while len(google_links) < 5:
+while len(google_links) < 3:
     google_search_url = f"https://www.google.com/search?q={query}&start={start}"
     wd.get(google_search_url)
     time.sleep(3)
@@ -85,7 +85,7 @@ while len(google_links) < 5:
             if "/p/" in link and "instagram.com" in link and link not in seen_links:
                 google_links.append(link)
                 seen_links.add(link)
-                if len(google_links) >= 5:
+                if len(google_links) >= 3:
                     break
     except Exception as e:
         print("") #"Error fetching Google results: {e}"

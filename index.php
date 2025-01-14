@@ -57,6 +57,22 @@
                         <img src="/public/image/search_icon.png" alt="Search">
                     </button>
                 </div>
+                <div class="flex flex-col justify-center items-center">
+                    <div class="flex space-x-6 mr-5 mt-4">
+                        <label class="flex items-center space-x-2">
+                            <input type="checkbox" id="platform-youtube-start" value="youtube" class="platform-checkbox-start w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500" checked>
+                            <span class="text-lg text-gray-700">YouTube</span>
+                        </label>
+                        <label class="flex items-center space-x-2">
+                            <input type="checkbox" id="platform-instagram-start" value="instagram" class="platform-checkbox-start w-5 h-5 text-pink-600 border-gray-300 rounded focus:ring-pink-500" checked>
+                            <span class="text-lg text-gray-700">Instagram</span>
+                        </label>
+                        <label class="flex items-center space-x-2">
+                            <input type="checkbox" id="platform-x-start" value="x" class="platform-checkbox-start w-5 h-5 text-black border-gray-300 rounded focus:ring-gray-700" checked>
+                            <span class="text-lg text-gray-700 mr-4">X</span>
+                        </label>
+                    </div>
+                </div>
             </div>
         </form>
 
@@ -171,7 +187,7 @@
                 event.preventDefault(); // Mencegah reload halaman
 
                 const keyword = $('#keyword').val();
-                const method = $('input[name="method"]:checked').val();
+                const platforms = $('.platform-checkbox-start:checked').map((_, el) => el.value).get();
 
                 if (!keyword) {
                     alert('Please enter a keyword!');
@@ -187,7 +203,7 @@
                     type: 'POST',
                     data: {
                         keyword: keyword,
-                        method: method,
+                        platforms: platforms,
                     },
                     dataType: 'json',
                     success: function(response) {
@@ -203,27 +219,15 @@
                         console.log(response);
                         // Proses data dan masukkan ke dalam variabel `data`
                         data = {
-                            all: [
-                                ...response.instagram,
-                                ...response.x,
-                                ...response.youtube
-                            ],
                             instagram: response.instagram,
                             x: response.x,
                             youtube: response.youtube,
-                            // instagram_x: [
-                            //     ...response.instagram,
-                            //     ...response.x
-                            // ],
-                            // instagram_youtube: [
-                            //     ...response.instagram,
-                            //     ...response.youtube
-                            // ],
-                            // x_youtube: [
-                            //     ...response.x,
-                            //     ...response.youtube
-                            // ]
                         };
+                        Object.keys(data).forEach(key => {
+                            if (data[key] === null) {
+                                delete data[key];
+                            }
+                        });
                         console.log(data);
                         displayCards();
                     },
@@ -298,19 +302,19 @@
             displayCards(); // Panggil ulang fungsi displayCards untuk memperbarui tampilan
         });
 
-        $(document).ready(function() {
-            // Event handler untuk setiap perubahan pada checkbox platform
-            $('.platform-checkbox').on('change', function() {
-                // Cek apakah semua checkbox tidak dicentang
-                if ($('.platform-checkbox:checked').length === 0) {
-                    // Munculkan form result
-                    $('#messageBoxAlert').removeClass('hidden');
-                } else {
-                    // Sembunyikan form input
-                    $('#messageBoxAlert').addClass('hidden');
-                }
-            });
-        });
+        // $(document).ready(function() {
+        //     // Event handler untuk setiap perubahan pada checkbox platform
+        //     $('.platform-checkbox').on('change', function() {
+        //         // Cek apakah semua checkbox tidak dicentang
+        //         if ($('.platform-checkbox:checked').length === 0) {
+        //             // Munculkan form result
+        //             $('#messageBoxAlert').removeClass('hidden');
+        //         } else {
+        //             // Sembunyikan form input
+        //             $('#messageBoxAlert').addClass('hidden');
+        //         }
+        //     });
+        // });
 
         $(document).ready(function() {
             // Re-render cards when a checkbox is toggled
@@ -343,13 +347,35 @@
             const section = document.getElementById('results');
             section.innerHTML = ''; // Clear existing cards
 
-            // Filter and sort data
-            const filteredData = data.all
-                .filter(item => selectedPlatforms.includes(item.source.toLowerCase()))
-                .sort((a, b) => selectedSimilarity === 'cosine' ?
-                    b.cosine_similarity - a.cosine_similarity :
-                    b.asymetric_similarity - a.asymetric_similarity); // descending. kalau ascending a-b
+            // Filter out platforms that are null in the data
+            const validSelectedPlatforms = selectedPlatforms.filter(platform =>
+                data[platform] !== null && Array.isArray(data[platform])
+            );
 
+            // Combine all valid data into one array
+            const allData = validSelectedPlatforms.reduce((acc, platform) => {
+                if (data[platform]) {
+                    // Add source property to each item
+                    const itemsWithSource = data[platform].map(item => ({
+                        ...item,
+                        source: platform
+                    }));
+                    return [...acc, ...itemsWithSource];
+                }
+                return acc;
+            }, []);
+
+            // Sort combined data
+            const filteredData = allData.sort((a, b) => selectedSimilarity === 'cosine' ?
+                b.cosine_similarity - a.cosine_similarity :
+                b.asymetric_similarity - a.asymetric_similarity);
+
+            if (filteredData.length === 0) {
+                $('#messageBoxAlert').removeClass('hidden');
+                return;
+            } else {
+                $('#messageBoxAlert').addClass('hidden');
+            }
             const start = (currentPage - 1) * itemsPerPage;
             const end = start + itemsPerPage;
             const currentData = filteredData.slice(start, end);
@@ -436,10 +462,20 @@
             document.getElementById('currentPage').textContent = currentPage;
         }
 
-        // Next page
         function nextPage() {
             const selectedPlatforms = $('.platform-checkbox:checked').map((_, el) => el.value).get();
-            const maxPage = Math.ceil(data.all.filter(item => selectedPlatforms.includes(item.source.toLowerCase())).length / itemsPerPage);
+
+            // Filter out platforms that are null in the data
+            const validSelectedPlatforms = selectedPlatforms.filter(platform =>
+                data[platform] !== null && Array.isArray(data[platform])
+            );
+
+            // Get total items from all valid platforms
+            const totalItems = validSelectedPlatforms.reduce((total, platform) => {
+                return total + (data[platform] ? data[platform].length : 0);
+            }, 0);
+
+            const maxPage = Math.ceil(totalItems / itemsPerPage);
 
             if (currentPage < maxPage) {
                 currentPage++;
