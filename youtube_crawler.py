@@ -21,7 +21,10 @@ results = []
 
 # Keyword pencarian
 # keyword = "Terima kasih pak Jokowi"  # Ganti dengan keyword yang diinginkan
-keyword = "shin tae yong"
+keyword = " ".join(sys.argv[1:])
+keyword = preprocessing.stemmer_and_remove_stopwords(
+          preprocessing.preprocess_text(keyword)
+        )
 
 # URL untuk pencarian video berdasarkan keyword
 search_url = f"https://www.googleapis.com/youtube/v3/search?key={api_key}&q={requests.utils.quote(keyword)}&part=snippet&type=video&maxResults=15"
@@ -69,7 +72,7 @@ def fetch_youtube_data(url):
         response.raise_for_status()  # Raise an HTTPError for bad responses (4xx and 5xx)
         return response.json()
     except requests.exceptions.RequestException as e:
-        print(f"HTTP Request Error: {e}")
+        # print(f"HTTP Request Error: {e}")
         return {}
 
 # Ambil video berdasarkan keyword
@@ -121,7 +124,7 @@ if search_results.get('items'):
                 preprocessed_text["comments"].append(preprocessed_comment)
                 # print(f"- {comment_text}")
         else:
-            print("No comments found")
+            print("")
 
         # Similarity
         cosine_similarity = similarity.calculateCosineSimilarity(preprocessed_text, keyword)

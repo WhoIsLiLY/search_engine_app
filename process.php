@@ -12,6 +12,7 @@ $results_x = json_decode($output_x, true);
 $results_youtube = json_decode($output_youtube, true);
 // print_r($results_instagram);
 // print_r($results_youtube);
+// print_r($results_x)
 
 // Gabungkan ketiga hasil crawler ke dalam satu array
 $final_results = array(

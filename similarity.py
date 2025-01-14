@@ -15,7 +15,7 @@ def calculateCosineSimilarity(preprocessed_text, keyword):
     documents.extend(preprocessed_text["comments"]) # ["a", "b"] ["a", "b", "c"]
     
     if not documents:  # If no documents exist
-        return 10
+        return 0
     
     # Add keyword as the last document
     documents.append(keyword)
@@ -39,7 +39,7 @@ def calculateAsymmetricSimilarity(preprocessed_text, keyword):
     documents.extend(preprocessed_text["comments"])
     
     if not documents:  # If no documents exist
-        return 10
+        return 0
     
     max_asymmetric_sim = 0.0
     

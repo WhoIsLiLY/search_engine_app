@@ -15,10 +15,10 @@
     <header class="bg-blue-600 text-white py-4">
         <div class="container mx-auto flex justify-between items-center">
             <!-- <h1 class="text-2xl font-bold">KEPO.COM</h1> -->
-             <div class="logo-container">
+            <div class="logo-container">
                 <img src="/public/image/logo_ubaya.png" alt="Ubaya Logo" class="logo-ubaya">
                 <img src="/public/image/logo_if.png" alt="IF Logo" class="logo-if">
-             </div>
+            </div>
             <div class="button-container">
                 <button type="submit" id="homeButton" class="homeButton">Home</button>
                 <button type="submit" id="resultButton" class="resultButton">Result</button>
@@ -52,7 +52,7 @@
             <div class="search-container">
                 <h1 class="search-tittle">KEPOIN</h1>
                 <div class="search-bar">
-                    <input type="text" placeholder="SEARCH..." class="search-input">
+                    <input type="text" name="keyword" id="keyword" placeholder="SEARCH..." class="search-input">
                     <button type="submit" id="searchButton" class="search-button">
                         <img src="/public/image/search_icon.png" alt="Search">
                     </button>
@@ -124,8 +124,21 @@
             </div>
         </div>
 
+        <!-- Results Section -->
+        <div id="messageBoxAlert" class="hidden">
+            <div class="container mx-auto my-8 flex justify-center items-center h-96">
+                <div id="results" class="flex items-center justify-center p-6 border border-gray-300 rounded shadow-md dark:border-gray-700 bg-gray-50">
+                    <h1 class="text-lg text-gray-600 text-center">
+                        No result available. Please make sure you checked at least 1 of the checkboxes<br>
+                        Or make sure your keyword valid
+                    </h1>
+                </div>
+            </div>
+        </div>
+
+
         <!-- Pagination -->
-        <div class="container mx-auto text-center my-4">
+        <div id="page" class="container mx-auto text-center my-4">
             <button class="py-2 px-4 bg-gray-200 rounded-lg mr-2" onclick="prevPage()">Previous</button>
             <span id="currentPage" class="font-bold">1</span>
             <button class="py-2 px-4 bg-gray-200 rounded-lg ml-2" onclick="nextPage()">Next</button>
@@ -135,9 +148,9 @@
     </div>
 
     <!-- Footer -->
-    <footer>
-        <div class="footer-container">
-            <p>&copy; 2025 KEPO.COM. All rights reserved.</p>
+    <footer class="text-white py-4 mt-8">
+        <div class="container mx-auto text-center">
+            <p>&copy; 2025 KEPOIN. All rights reserved.</p>
         </div>
     </footer>
 
@@ -277,6 +290,27 @@
 
         let currentPage = 1;
         const itemsPerPage = 6;
+        let selectedSimilarity = 'cosine';
+
+        // Tambahkan event listener menggunakan jQuery
+        $('input[name="similarity"]').on('change', function() {
+            selectedSimilarity = $(this).val(); // Update nilai similarity yang dipilih
+            displayCards(); // Panggil ulang fungsi displayCards untuk memperbarui tampilan
+        });
+
+        $(document).ready(function() {
+            // Event handler untuk setiap perubahan pada checkbox platform
+            $('.platform-checkbox').on('change', function() {
+                // Cek apakah semua checkbox tidak dicentang
+                if ($('.platform-checkbox:checked').length === 0) {
+                    // Munculkan form result
+                    $('#messageBoxAlert').removeClass('hidden');
+                } else {
+                    // Sembunyikan form input
+                    $('#messageBoxAlert').addClass('hidden');
+                }
+            });
+        });
 
         $(document).ready(function() {
             // Re-render cards when a checkbox is toggled
@@ -312,7 +346,9 @@
             // Filter and sort data
             const filteredData = data.all
                 .filter(item => selectedPlatforms.includes(item.source.toLowerCase()))
-                .sort((a, b) => b.cosine_similarity - a.cosine_similarity); // descending. kalau ascending a-b
+                .sort((a, b) => selectedSimilarity === 'cosine' ?
+                    b.cosine_similarity - a.cosine_similarity :
+                    b.asymetric_similarity - a.asymetric_similarity); // descending. kalau ascending a-b
 
             const start = (currentPage - 1) * itemsPerPage;
             const end = start + itemsPerPage;
@@ -344,13 +380,9 @@
         <div class="mt-4">
             <span class="font-bold text-sm">Similarity:</span>
             <div class="w-full bg-gray-200 rounded-full h-4">
-                <div class="h-4 rounded-full" style="width: ${parseFloat(item.cosine_similarity) * 100}%; background-color: ${getColor(parseFloat(item.cosine_similarity) * 100)};"></div>
+                <div class="h-4 rounded-full" style="width: ${parseFloat(selectedSimilarity === 'cosine' ? item.cosine_similarity : item.asymetric_similarity) * 100}%; background-color: ${getColor(parseFloat(selectedSimilarity === 'cosine' ? item.cosine_similarity : item.asymetric_similarity) * 100)};"></div>
             </div>
-            <span class="text-sm text-gray-600">${item.cosine_similarity}</span>
-            <div class="w-full bg-gray-200 rounded-full h-4">
-                <div class="h-4 rounded-full" style="width: ${parseFloat(item.asymetric_similarity) * 100}%; background-color: ${getColor(parseFloat(item.asymetric_similarity) * 100)};"></div>
-            </div>
-            <span class="text-sm text-gray-600">${item.asymetric_similarity}</span>
+            <span class="text-sm text-gray-600">${selectedSimilarity === 'cosine' ? item.cosine_similarity : item.asymetric_similarity}</span>
         </div>
     `;
                 section.appendChild(card);

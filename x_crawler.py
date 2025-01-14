@@ -102,7 +102,7 @@ try:
         perform_login()
         wd.get(f"https://x.com/search?q={keyword}&f=media")
 
-    while len(x_links) < 2:
+    while len(x_links) < 5:
         time.sleep(3)
         try:
             x_results = wd.find_elements(By.CSS_SELECTOR, 'li.css-175oi2r a')
@@ -110,7 +110,7 @@ try:
                 link = result.get_attribute('href')
                 if "/photo/" in link and link not in x_links:
                     x_links.append(link)
-                    if len(x_links) >= 2:
+                    if len(x_links) >= 5:
                         break
         except Exception as e:
             print(f"Failed to fetch X search results: {e}")
@@ -191,11 +191,18 @@ for idx, link in enumerate(x_links):
     try:
         original_comments = []
         preprocessed_comments = []
-        wait = WebDriverWait(wd, 10)
+        wait = WebDriverWait(wd, 15)
         max_attempts = 10
         attempt = 0
 
-        while len(original_comments) < 10 and attempt < max_attempts:
+        # Catat waktu mulai loop
+        start_time = time.time()
+
+        while (len(original_comments) < 10 or attempt < max_attempts):
+            # Periksa apakah loop sudah berjalan selama 10 detik
+            if time.time() - start_time > 10:
+                break
+
             attempt += 1
             try:
                 scroll_to_bottom(wd)
@@ -205,7 +212,8 @@ for idx, link in enumerate(x_links):
 
                 for div in div_elements:
                     try:
-                        comment_text = div.find_element(By.CSS_SELECTOR, "[data-testid='tweetText']").text
+                        wait.until(EC.presence_of_element_located((By.XPATH, ".//*[@data-testid='tweetText']")))
+                        comment_text = div.find_element(By.XPATH, ".//*[@data-testid='tweetText']").text
                         # print(f"Processing comment: {comment_text[:50]}...")
                         
                         if comment_text not in original_comments:
@@ -215,17 +223,17 @@ for idx, link in enumerate(x_links):
                             )
                             
                             # if any(word in preprocessed_comment.split() for word in keyword_list):
-                            original_comments.append(comment_text)
-                            preprocessed_comments.append(preprocessed_comment)
+                            original_comments.append(comment_text[1:])
+                            preprocessed_comments.append(preprocessed_comment[1:])
                             # print(f"Added comment. Total comments: {len(original_comments)}")
                             if len(original_comments) >= 10:
                                 break
                     except Exception as e:
-                        print("") #"Error processing element: {e}"
+                        print("")  # "Error processing element: {e}"
                         continue
 
             except Exception as e:
-                print("") #"Error in main loop: {e}"
+                print("")  # "Error in main loop: {e}"
                 time.sleep(2)  # Wait before retrying
 
         preprocessed_text["comments"] = preprocessed_comments[:10]

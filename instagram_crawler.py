@@ -46,26 +46,26 @@ except Exception as e:
     sys.exit(1)
 
 # # Instagram login
-# username = "dummy_ig_iir"  # Replace with your Instagram username
-# password = "dummyinstagram"  # Replace with your Instagram password
+username = "dummy_ig_iir"  # Replace with your Instagram username
+password = "dummyinstagram"  # Replace with your Instagram password
 
-# try:
-#     wd.get("https://www.instagram.com/accounts/login/")
-#     WebDriverWait(wd, 30).until(EC.presence_of_element_located((By.NAME, "username")))
+try:
+    wd.get("https://www.instagram.com/accounts/login/")
+    WebDriverWait(wd, 30).until(EC.presence_of_element_located((By.NAME, "username")))
 
-#     wd.find_element(By.NAME, "username").send_keys(username)
-#     wd.find_element(By.NAME, "password").send_keys(password)
+    wd.find_element(By.NAME, "username").send_keys(username)
+    wd.find_element(By.NAME, "password").send_keys(password)
 
-#     login_button = WebDriverWait(wd, 10).until(
-#         EC.element_to_be_clickable((By.XPATH, "//button[contains(., 'Log in') or contains(., 'Masuk')]"))
-#     )
-#     login_button.click()
+    login_button = WebDriverWait(wd, 10).until(
+        EC.element_to_be_clickable((By.XPATH, "//button[contains(., 'Log in') or contains(., 'Masuk')]"))
+    )
+    login_button.click()
 
-#     WebDriverWait(wd, 30).until(EC.url_changes("https://www.instagram.com/accounts/login/"))
-# except Exception as e:
-#     print(f"Failed to log in: {e}")
-#     wd.quit()
-#     sys.exit(1)
+    WebDriverWait(wd, 30).until(EC.url_changes("https://www.instagram.com/accounts/login/"))
+except Exception as e:
+    print(f"Failed to log in: {e}")
+    wd.quit()
+    sys.exit(1)
 
 # Search Instagram posts on Google
 query = "site:instagram.com+inurl:/p/+" + keyword
@@ -73,7 +73,7 @@ google_links = []
 seen_links = set()
 start = 0
 
-while len(google_links) < 1:
+while len(google_links) < 5:
     google_search_url = f"https://www.google.com/search?q={query}&start={start}"
     wd.get(google_search_url)
     time.sleep(3)
@@ -85,10 +85,10 @@ while len(google_links) < 1:
             if "/p/" in link and "instagram.com" in link and link not in seen_links:
                 google_links.append(link)
                 seen_links.add(link)
-                if len(google_links) >= 1:
+                if len(google_links) >= 5:
                     break
     except Exception as e:
-        print(f"Error fetching Google results: {e}")
+        print("") #"Error fetching Google results: {e}"
 
     start += 10
     if len(google_results) == 0:
@@ -151,9 +151,16 @@ for idx, link in enumerate(google_links):
     try:
         original_comments = []
         preprocessed_comments = []
-        wait = WebDriverWait(wd, 10)  # Tunggu maksimal 10 detik
+        wait = WebDriverWait(wd, 15)  # Tunggu maksimal 10 detik
 
-        while len(original_comments) < 10:  # Loop hingga setidaknya 10 komentar diambil
+        # Catat waktu mulai loop
+        start_time = time.time()
+
+        while len(original_comments) < 10:  # Loop hingga setidaknya 10 komentar diambil atau waktu habis
+            # Periksa apakah loop sudah berjalan selama 10 detik
+            if time.time() - start_time > 10:
+                break
+
             # Tunggu hingga elemen komentar tersedia
             wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "ul._a9ym li span._aaco")))
             current_comments = wd.find_elements(By.CSS_SELECTOR, "ul._a9ym li span._aaco")
@@ -173,18 +180,10 @@ for idx, link in enumerate(google_links):
                     # else:
                     #     continue
 
-            try:
-                # Tunggu hingga tombol 'load more' tersedia
-                load_more_button = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "button._abl-")))
-                load_more_button.click()
-                time.sleep(2)  # Tambahkan delay agar elemen baru dapat dimuat
-            except:
-                break
-
         preprocessed_text["comments"] = preprocessed_comments[:10]
         original_text["comments"] = original_comments[:10]
     except Exception as e:
-        print(f"Error while fetching comments: {e}")
+        print("") #print(f"Error while fetching comments: {e}")
     
     # Similarity
     cosine_similarity = similarity.calculateCosineSimilarity(preprocessed_text, keyword)
